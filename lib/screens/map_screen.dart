@@ -13,11 +13,14 @@ import '../services/geocoding_service.dart';
 import 'lines_screen.dart';
 
 class MapScreen extends StatefulWidget {
-  const MapScreen({super.key});
+  final String? initialLineNumber;
+  const MapScreen({super.key, this.initialLineNumber});
 
   @override
   State<MapScreen> createState() => _MapScreenState();
 }
+
+bool _hasShownInfoBubble = false;
 
 class _MapScreenState extends State<MapScreen> {
   final MapController _mapController = MapController();
@@ -30,6 +33,7 @@ class _MapScreenState extends State<MapScreen> {
   bool _isLoading = true;
   LatLng? _currentLocation;
   bool _isLocating = false;
+  bool _showInfoBubble = false;
 
   bool _isSearchMode = false;
   final TextEditingController _destController = TextEditingController();
@@ -48,6 +52,18 @@ class _MapScreenState extends State<MapScreen> {
     super.initState();
     _loadBusData();
     _checkLocationPermission();
+
+    if (!_hasShownInfoBubble) {
+      _showInfoBubble = true;
+      _hasShownInfoBubble = true;
+      Future.delayed(const Duration(seconds: 10), () {
+        if (mounted) {
+          setState(() {
+            _showInfoBubble = false;
+          });
+        }
+      });
+    }
   }
 
   @override
@@ -101,10 +117,23 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
+  String _normalizeString(String str) {
+    const withDia = 'ÀÁÂÃÄÅàáâãäåÒÓÔÕÖØòóôõöøÈÉÊËèéêëÇçÌÍÎÏìíîïÙÚÛÜùúûüÿÑñ';
+    const withoutDia = 'AAAAAAaaaaaaOOOOOOooooooEEEEeeeeCcIIIIiiiiUUUUuuuuyNn';
+    String normalized = str.toLowerCase();
+    for (int i = 0; i < withDia.length; i++) {
+      normalized = normalized.replaceAll(
+        withDia[i].toLowerCase(),
+        withoutDia[i].toLowerCase(),
+      );
+    }
+    return normalized;
+  }
+
   void _onSearchChanged(String query) {
     if (_searchDebounce?.isActive ?? false) _searchDebounce!.cancel();
 
-    if (query.length < 3) {
+    if (query.length < 2) {
       setState(() {
         _searchResults = [];
         _isSearchingPlace = false;
@@ -112,30 +141,76 @@ class _MapScreenState extends State<MapScreen> {
       return;
     }
 
-    _searchDebounce = Timer(const Duration(milliseconds: 600), () async {
-      setState(() => _isSearchingPlace = true);
+    // 1. Recherche locale immédiate au fil de la frappe (Arrêts connus SOTRACO)
+    String normalizedQuery = _normalizeString(query);
+    List<Map<String, dynamic>> localResults = [];
+    Set<String> addedStops = {};
 
-      try {
-        final results = await _geocodingService.searchPlaces(query);
-        if (mounted) {
-          setState(() {
-            _searchResults = results;
-            _isSearchingPlace = false;
+    for (var line in _allLines) {
+      for (var stop in line.stops) {
+        if (stop.name.isEmpty) continue;
+
+        String normalizedStop = _normalizeString(stop.name);
+
+        if (normalizedStop.contains(normalizedQuery) &&
+            !addedStops.contains(stop.name)) {
+          addedStops.add(stop.name);
+          localResults.add({
+            'name': stop.name,
+            'details': 'Arrêt Ligne ${line.lineNumber} (${line.name})',
+            'location': stop.location,
+            'is_local': true,
           });
         }
-      } catch (e) {
-        if (mounted) {
-          setState(() => _isSearchingPlace = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                "Veuillez activer votre connexion Internet pour chercher un lieu.",
-              ),
-            ),
-          );
-        }
       }
+    }
+
+    // Limiter les propositions locales pour ne pas inonder l'écran
+    localResults = localResults.take(8).toList();
+
+    setState(() {
+      _searchResults = localResults;
     });
+
+    // 2. Si l'utilisateur a tapé au moins 3 caractères, on lance ou prolonge la recherche globale OSM
+    if (query.length >= 3) {
+      _searchDebounce = Timer(const Duration(milliseconds: 600), () async {
+        setState(() => _isSearchingPlace = true);
+
+        try {
+          final osmResults = await _geocodingService.searchPlaces(query);
+          if (mounted) {
+            setState(() {
+              // Fusionner les résultats sans doublons parfaits de nom
+              var allMerged = [
+                ..._searchResults,
+              ]; // On part des résultats locaux ou déjà mergés
+              for (var result in osmResults) {
+                String osmNormalized = _normalizeString(result['name']);
+
+                // Ne pas écraser les arrêts locaux avec des doublons globaux
+                bool alreadyExists = allMerged.any(
+                  (existing) =>
+                      _normalizeString(existing['name']) == osmNormalized,
+                );
+
+                if (!alreadyExists) {
+                  result['is_local'] = false;
+                  allMerged.add(result);
+                }
+              }
+              _searchResults = allMerged;
+              _isSearchingPlace = false;
+            });
+          }
+        } catch (e) {
+          if (mounted) {
+            setState(() => _isSearchingPlace = false);
+            // L'erreur silencieuse est préférable si on a déjà des résultats locaux
+          }
+        }
+      });
+    }
   }
 
   void _calculateRoute() {
@@ -182,11 +257,27 @@ class _MapScreenState extends State<MapScreen> {
 
       setState(() {
         _allLines = lines;
-        _selectedLine = null;
+
+        if (widget.initialLineNumber != null) {
+          try {
+            _selectedLine = _allLines.firstWhere(
+              (line) => line.lineNumber == widget.initialLineNumber,
+            );
+          } catch (_) {
+            _selectedLine = null;
+          }
+        } else {
+          _selectedLine = null;
+        }
+
         _isLoading = false;
       });
 
-      _fitMapToAllLines();
+      if (_selectedLine != null) {
+        _fitMapToSelectedLine();
+      } else {
+        _fitMapToAllLines();
+      }
     } catch (e) {
       debugPrint("Erreur lors du chargement des données SOTRACO: $e");
       setState(() => _isLoading = false);
@@ -253,6 +344,130 @@ class _MapScreenState extends State<MapScreen> {
         );
       });
     }
+  }
+
+  void _showPricingInfo(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: Colors.grey.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const Row(
+              children: [
+                Icon(Icons.payments_outlined, color: Colors.green, size: 28),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    "Tarifs & Abonnements SOTRACO",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            _buildPricingRow(
+              context,
+              "Ticket à la course",
+              "200 FCFA",
+              Icons.confirmation_number,
+            ),
+            const Divider(),
+            _buildPricingRow(
+              context,
+              "Abonnement hebdomadaire",
+              "1 000 FCFA",
+              Icons.view_week,
+            ),
+            const Divider(),
+            _buildPricingRow(
+              context,
+              "Abonnement mensuel",
+              "3 000 FCFA",
+              Icons.calendar_month,
+            ),
+            const Divider(),
+            _buildPricingRow(
+              context,
+              "Abonnement annuel",
+              "35 000 FCFA",
+              Icons.event_available,
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: () => Navigator.pop(context),
+                child: const Text(
+                  "Fermer",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPricingRow(
+    BuildContext context,
+    String title,
+    String price,
+    IconData icon,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.grey, size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(fontWeight: FontWeight.w500),
+            ),
+          ),
+          Text(
+            price,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.green,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -416,7 +631,7 @@ class _MapScreenState extends State<MapScreen> {
                           RegExp(r'Terminus ', caseSensitive: false),
                           '',
                         )
-                        .replaceAll('➔', '↔')
+                        .replaceAll(RegExp(r'➔|→|->'), '↔')
                   : "Ligne ${line.lineNumber}";
 
               // Estimer la largeur en fonction de la taille du texte
@@ -426,36 +641,51 @@ class _MapScreenState extends State<MapScreen> {
                 Marker(
                   point: midPoint,
                   width: estimatedWidth > 200 ? 200 : estimatedWidth,
-                  height: 30,
-                  alignment: Alignment
-                      .bottomCenter, // Ancrage en bas pour être toujours au-dessus de la ligne
-                  child: Container(
-                    margin: const EdgeInsets.only(
-                      bottom: 6,
-                    ), // Marge supplémentaire pour ne jamais toucher la ligne
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: c,
-                      borderRadius: BorderRadius.circular(8),
-                      boxShadow: const [
-                        BoxShadow(color: Colors.black26, blurRadius: 4),
-                      ],
-                    ),
-                    child: Center(
-                      child: Text(
-                        displayName,
-                        textAlign: TextAlign.center,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
+                  height: 60, // Augmenté pour la ligne de liaison
+                  alignment: Alignment.topCenter,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: c,
+                          borderRadius: BorderRadius.circular(8),
+                          boxShadow: const [
+                            BoxShadow(color: Colors.black26, blurRadius: 4),
+                          ],
+                        ),
+                        child: Text(
+                          displayName,
+                          textAlign: TextAlign.center,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                    ),
+                      // Trait fin de liaison
+                      Container(
+                        width: 2,
+                        height: 25, // Longueur du trait
+                        color: c,
+                      ),
+                      // Petit point d'ancrage sur la ligne
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: c, width: 2),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               );
@@ -645,6 +875,56 @@ class _MapScreenState extends State<MapScreen> {
               ),
             ),
 
+          if (_showInfoBubble &&
+              _selectedLine == null &&
+              _selectedItinerary == null &&
+              !_isSearchMode)
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 80,
+              left: 16,
+              right: 16,
+              child: Material(
+                color: AppColors.primary,
+                elevation: 6,
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.touch_app, color: Colors.white),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Text(
+                          "Appuyez sur une ligne sur la carte pour voir ses détails !",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.close,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        onPressed: () {
+                          setState(() {
+                            _showInfoBubble = false;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
           if (_isSearchMode) _buildSearchOverlay(isDark),
 
           if (_isLoading)
@@ -793,6 +1073,16 @@ class _MapScreenState extends State<MapScreen> {
                     }
                   },
                 ),
+                const SizedBox(height: 16),
+                // Bouton Tarifs et abonnements
+                FloatingActionButton(
+                  heroTag: 'pricing_btn',
+                  backgroundColor: isDark ? AppColors.darkSlate : Colors.white,
+                  child: const Icon(Icons.payments, color: Colors.green),
+                  onPressed: () {
+                    _showPricingInfo(context);
+                  },
+                ),
               ],
             ),
           ),
@@ -905,20 +1195,45 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   Widget _buildSearchResults() {
-    if (_isSearchingPlace) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
+    if (_isSearchingPlace && _searchResults.isEmpty) {
       return const Center(
         child: CircularProgressIndicator(color: AppColors.primary),
       );
     }
-    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
     return ListView.builder(
-      itemCount: _searchResults.length,
+      itemCount: _searchResults.length + (_isSearchingPlace ? 1 : 0),
       itemBuilder: (context, index) {
+        if (index == _searchResults.length) {
+          return const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Center(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+          );
+        }
+
         final place = _searchResults[index];
+        final bool isLocal = place['is_local'] == true;
+
         return ListTile(
-          leading: const CircleAvatar(
-            backgroundColor: Colors.grey,
-            child: Icon(Icons.place, color: Colors.white),
+          leading: CircleAvatar(
+            backgroundColor: isLocal
+                ? Colors.green.withValues(alpha: 0.2)
+                : Colors.grey.withValues(alpha: 0.2),
+            child: Icon(
+              isLocal ? Icons.directions_bus : Icons.place,
+              color: isLocal ? Colors.green : Colors.grey,
+            ),
           ),
           title: Text(
             place['name'],
@@ -933,6 +1248,7 @@ class _MapScreenState extends State<MapScreen> {
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               color: isDark ? Colors.grey[400] : Colors.grey[700],
+              fontSize: 12,
             ),
           ),
           onTap: () {
@@ -940,7 +1256,7 @@ class _MapScreenState extends State<MapScreen> {
             _destController.text = place['name'];
             setState(() {
               _selectedDestination = place['location'];
-              _searchResults = []; // On efface les résultats de géocodage
+              _searchResults = []; // On efface les résultats
             });
             _calculateRoute();
           },
@@ -997,7 +1313,7 @@ class _MapScreenState extends State<MapScreen> {
         String lineTitle = segment.line.name.isNotEmpty
             ? segment.line.name
                   .replaceAll(RegExp(r'Terminus ', caseSensitive: false), '')
-                  .replaceAll('➔', '↔')
+                  .replaceAll(RegExp(r'➔|→|->'), '↔')
             : 'Ligne ${segment.line.lineNumber}';
 
         Color cardColor = isDark ? Colors.grey[850]! : Colors.white;

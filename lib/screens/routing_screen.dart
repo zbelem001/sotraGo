@@ -285,7 +285,7 @@ class _RoutingScreenState extends State<RoutingScreen> {
         String lineTitle = segment.line.name.isNotEmpty
             ? segment.line.name
                   .replaceAll(RegExp(r'Terminus ', caseSensitive: false), '')
-                  .replaceAll('➔', '↔')
+                  .replaceAll(RegExp(r'➔|→|->'), '↔')
             : 'Ligne ${segment.line.lineNumber}';
 
         return Card(

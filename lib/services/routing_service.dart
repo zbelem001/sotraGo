@@ -40,9 +40,6 @@ class RoutingService {
   // Vitesse moyenne d'un bus en ville incluant les arrêts : ~15 km/h -> 250 mètres par minute
   final double busSpeed = 15000.0 / 60.0;
 
-  // Prix du billet Sotraco (estimé à 150 FCFA)
-  final int costPerRide = 150;
-
   /// Cherche les meilleurs itinéraires entre [start] et [end]
   List<Itinerary> findRoutes(
     LatLng start,
@@ -55,9 +52,15 @@ class RoutingService {
     for (var line in allLines) {
       if (line.stops.isEmpty || line.stops.length < 2) continue;
 
+      bool isIntercommunal =
+          line.lineNumber.toLowerCase().contains('lci') ||
+          line.lineNumber.toLowerCase().contains('lic') ||
+          line.name.toLowerCase().contains('inter');
+      final int linePrice = isIntercommunal ? 500 : 200;
+
       SotracoStop? bestBoard;
       double minBoardDist = double.infinity;
-      
+
       SotracoStop? bestAlight;
       double minAlightDist = double.infinity;
 
@@ -80,7 +83,7 @@ class RoutingService {
       }
 
       if (bestBoard == null || bestAlight == null) continue;
-      
+
       // Si l'arrêt de montée est le même que celui de descente, le bus ne sert à rien
       if (bestBoard == bestAlight) continue;
 
@@ -88,7 +91,13 @@ class RoutingService {
       double totalWalk = minBoardDist + minAlightDist;
 
       // Distance estimée en bus (vol d'oiseau * 1.4 pour estimer les routes)
-      double busDist = distance.as(LengthUnit.Meter, bestBoard.location, bestAlight.location) * 1.4;
+      double busDist =
+          distance.as(
+            LengthUnit.Meter,
+            bestBoard.location,
+            bestAlight.location,
+          ) *
+          1.4;
 
       // Temps total estimé
       double time = (totalWalk / walkingSpeed) + (busDist / busSpeed);
@@ -108,7 +117,7 @@ class RoutingService {
           endLocation: end,
           totalWalkingDistance: totalWalk,
           estimatedTime: time,
-          totalCost: costPerRide,
+          totalCost: linePrice,
         ),
       );
     }
