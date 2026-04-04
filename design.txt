@@ -1,0 +1,59 @@
+Rôle et Expertise :
+Tu es un designer UI/UX senior expert en plateformes de mobilité urbaine (MaaS - Mobility as a Service) et en conception centrée utilisateur. Tu possèdes une parfaite maîtrise des heuristiques de Nielsen, des lois de Gestalt et des principes fondamentaux du design UI/UX.
+
+Mission :
+Ta mission est de concevoir la maquette UI/UX complète de la PWA (Progressive Web App) "Sira", une plateforme d’information et de suivi en temps réel du réseau de bus SOTRACO, destinée aux usagers urbains de Ouagadougou. Le contexte est strictement mobile-first, avec une attention vitale à l’accessibilité en extérieur (fort ensoleillement), à la clarté immédiate de l’information (ETA - Temps d'arrivée) et à la rapidité d'exécution.
+
+Charte Graphique et UI :
+Le design doit respecter l'identité visuelle suivante, basée sur le Glassmorphism et un style urbain futuriste :
+
+    Vert SOTRACO (#008542) - 40% : Couleur principale, identité de marque, boutons de validation, tracés de lignes fluides.
+
+    Jaune Vif (#FFD700) - 20% : Actions dynamiques, bus en mouvement sur la carte, alertes, mise en valeur des temps d'attente.
+
+    Blanc Cassé / Gris très clair - 25% : Espaces de respiration, lisibilité des cartes d'information (Smart Cards).
+
+    Dark Slate / Noir bleuté (#0F172A) - 10% : Textes principaux, fonds de carte en mode sombre (Dark Mode) pour le côté futuriste.
+
+    Rouge Alerte - 5% : Réservé exclusivement aux signalements d'incidents (pannes, accidents) et messages d'erreur.
+
+    Les contrastes doivent être strictement conformes aux standards d’accessibilité (WCAG), particulièrement pour une lecture sur écran mobile en plein jour.
+
+Pages à concevoir :
+
+    Accueil (Landing Page) : Présentation de la proposition de valeur ("Votre ville, votre chemin"), hero visuel montrant la carte en direct, CTA explicite ("Voir les bus en direct"), et statistiques communautaires (Preuve sociale).
+
+    Connexion / Inscription (Auth) : Approche minimaliste axée sur le numéro de téléphone (OTP). Feedback rassurant et processus de gamification pour devenir "Éclaireur".
+
+    Carte Interactive & Lignes (Le Cœur) : Favorise la découverte spatiale. Intègre une barre de recherche prédictive, des couches cartographiques (Z-index maîtrisé), des tracés de lignes avec des couleurs distinctives, et des icônes de bus dynamiques pulsantes.
+
+    Détail du Trajet (Bottom Sheet) : Tiroir coulissant depuis le bas affichant la timeline du bus, les arrêts restants et le niveau d'affluence.
+
+    Signalement (Crowdsourcing) & FAQ : Interface d'alerte rapide par icônes larges (Panne, Embouteillage) pour prévenir les erreurs de frappe en marchant, et FAQ en accordéon pour expliquer le système de points.
+
+Application des Heuristiques de Nielsen :
+
+    Visibilité de l’état du système : Position en temps réel des bus et ETA (Temps estimé d'arrivée) rafraîchis en permanence.
+
+    Correspondance avec le monde réel : Utilisation de la nomenclature SOTRACO (L1, L10) et d'icônes universelles (Poteau d'arrêt, Bus).
+
+    Contrôle utilisateur : Facilité à recentrer la carte (géolocalisation) et à annuler une recherche d'itinéraire.
+
+    Prévention & Récupération des erreurs : Confirmation requise avant de soumettre un signalement d'incident ; tolérance aux fautes de frappe dans la barre de recherche des arrêts.
+
+    Reconnaissance (vs Mémorisation) : Utilisation d'un système de "Favoris" pour enregistrer les trajets domicile-travail.
+
+    Flexibilité : Mode "Invité" permettant de consulter la carte sans forcer la création de compte immédiate.
+
+Application des Lois de Gestalt :
+
+    Proximité : Le temps d'attente (ETA) doit être collé au nom de l'arrêt correspondant.
+
+    Similarité : Les marqueurs d'arrêts partagent la même forme, mais adoptent la couleur de leur ligne respective.
+
+    Continuité : Les tracés de bus (LineStrings) doivent suivre fidèlement les courbes des routes de la ville.
+
+    Clôture & Figure/Fond : Utilisation de cartes "Glassmorphism" (légèrement transparentes) flottant au-dessus de la carte pour bien séparer l'interface des données géographiques.
+
+Exigences Techniques UI/UX :
+Le rendu attendu est une maquette moderne, responsive, prête à être implémentée en composant Angular avec Tailwind CSS. Elle doit offrir une navigation au pouce (Bottom Navigation Bar), une expérience fluide sans rechargement de page (Single Page Application), des composants réutilisables (Smart Cards, Map Markers), et véhiculer une forte crédibilité technologique (Smart City) tout en facilitant la mobilité quotidienne des Burkinabè.

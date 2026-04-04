@@ -1,0 +1,547 @@
+[
+  {
+    "city": "Ouagadougou",
+    "line_number": "Ligne 1",
+    "description": "Karpala - Terminus Naba Koom (via l'avenue Charles DE GAULLE)",
+    "stops": [
+      "Station SOGEL B",
+      "Palais de justice",
+      "Lycée Thomas Sankara",
+      "Clinique KASSAM",
+      "Pharmacie magnificat",
+      "Station FAMA",
+      "SOGEL B ancien terminus",
+      "District sanitaire de Bogodogo",
+      "SIAO",
+      "Maison de la Femme",
+      "Hôpital pédiatrique",
+      "Av. Charles de Gaulle",
+      "SP/CNLS",
+      "OST",
+      "Av de l'indépendance",
+      "Trésor public",
+      "DG Police Nationale",
+      "SONAPOST siége",
+      "Maison du peuple",
+      "Terminus Naba Koom"
+    ]
+  },
+  {
+    "city": "Ouagadougou",
+    "line_number": "Ligne 2",
+    "description": "Yamtenga - Terminus Naba Koom (via rond point de la Patte-d'Oie)",
+    "stops": [
+      "Yamtenga (lycée communal)",
+      "Katre Yare",
+      "Mairie de Bogodogo",
+      "village artisanal de Ouagadougou",
+      "district sanitaire de Bogodogo DR SONABEL",
+      "Ouaga inter",
+      "Rondpoint de la patte d'Oie",
+      "AV  Basawarga",
+      "château du Mogho Naba",
+      "station OILYBIA Grande mosquée de Ouaga",
+      "l'église Central des assemblés de DIEU",
+      "Terminus Naba Koom"
+    ]
+  },
+  {
+    "city": "Ouagadougou",
+    "line_number": "Ligne 2B",
+    "description": "Balkuy - Terminus Naba Koom",
+    "stops": [
+      "Balkuy",
+      "Trame d'accueil Ouaga 2000",
+      "Camp Baba SY",
+      "IAM Ouaga 2000",
+      "Echangeur du Sud",
+      "DR SONABEL",
+      "Plan Burkina",
+      "PETROFA ZAD",
+      "Gare Rahimo",
+      "Clinique Sandof",
+      "Saint Camille",
+      "Alimentation la surface",
+      "Marché de Zogona",
+      "Zone du Bois",
+      "CHU Yalagado",
+      "SP/CNLS",
+      "OST",
+      "Av. de l'indépendance",
+      "Trésor public",
+      "DG Police Nationale",
+      "SONAPOST siège",
+      "Maison du peuple",
+      "Terminus Naba Koom"
+    ]
+  },
+  {
+    "city": "Ouagadougou",
+    "line_number": "Ligne 3",
+    "description": "Bissighin - Terminus zone des écoles (via échangeur du Nord)",
+    "stops": [
+      "DRB Bissighin",
+      "Carrefour Rimkieta",
+      "Kilwin",
+      "Echangeur du nord",
+      "Marché de baskuy",
+      "Kolog naba",
+      "Staf Larlé",
+      "Place de la nation",
+      "Maison du peuple",
+      "Rondpoint des Nations Unies",
+      "DG Police nationale",
+      "terminus Zone des écoles"
+    ]
+  },
+  {
+    "city": "Ouagadougou",
+    "line_number": "Ligne 4",
+    "description": "Sandogo - Terminus zone des écoles",
+    "stops": [
+      "Sandogo",
+      "Alimentation bon Samaritin",
+      "Boulangerie wend konta",
+      "ONEA siège (pissy)",
+      "SONABHY",
+      "Echangeur de l'ouest",
+      "Station TOTAL Gounghin",
+      "Maison de retraite Antoine Nanga",
+      "DR LONAB",
+      "Ecole nationale de la Police",
+      "ESCO IGES",
+      "Service de passports",
+      "Place de la Nation",
+      "Maison du peuple",
+      "rond",
+      "point des Nation Unies",
+      "DG police nationale",
+      "Terminus Zone des écoles"
+    ]
+  },
+  {
+    "city": "Ouagadougou",
+    "line_number": "Ligne 4B",
+    "description": "Zagtouli - Terminus zone des écoles",
+    "stops": [
+      "Maison des jeunes Zagtouli",
+      "Mairie de Boulmiougou",
+      "ONEA siège (Pissy)",
+      "SONABHY",
+      "Echangeur de l'Ouest",
+      "Marché de Gounghin",
+      "Eglise AD",
+      "Service des passports",
+      "Place de la Nation",
+      "Maison du peuple",
+      "Rond",
+      "point des Nations Unies",
+      "DG Police Nationale",
+      "Terminus Zone des écoles"
+    ]
+  },
+  {
+    "city": "Ouagadougou",
+    "line_number": "Ligne 5",
+    "description": "Sigui Yaar de Bargo (route de Fada) - Terminus Naba Koom",
+    "stops": [
+      "Sigui Yaar de Bargo",
+      "Station ORYX Signonghin",
+      "Carrefour Saaba",
+      "Marché de Bendogo",
+      "Echangeur de l'Est",
+      "Gare de l'Est",
+      "ENAREF",
+      "CHU Yalagado OUEDRAOGO",
+      "SP/CNLS",
+      "OST",
+      "Av, de l'indépendance",
+      "Trésor public",
+      "DG Police Nationale",
+      "SONAPOST siège",
+      "Maison du peuple",
+      "Terminus Naba Koom"
+    ]
+  },
+  {
+    "city": "Ouagadougou",
+    "line_number": "Ligne 5B",
+    "description": "Terminus One School (Saaba) - Terminus Naaba Koom",
+    "stops": [
+      "Terminus One school",
+      "Barrage de Kaongo",
+      "CSPS de Saaba",
+      "Marché de Saaba",
+      "Préfecture de Saaba",
+      "Lycée Privé Elisa",
+      "Station OTAM",
+      "RN4",
+      "Marché de Benogo",
+      "Echangeur de l’Est",
+      "Hôpital Yalgado",
+      "Naba Koom"
+    ]
+  },
+  {
+    "city": "Ouagadougou",
+    "line_number": "Ligne 6",
+    "description": "Koulweoguin - Terminus Naba Koom",
+    "stops": [
+      "Château d'eau de Koulwéoghin",
+      "Marché de Tanghin",
+      "Collège Protestant",
+      "Carrefour Sœur Josephine (Barrage N°2)",
+      "SONABEL",
+      "Paspanga",
+      "Avenue de la liberté (av, 56)",
+      "PPI",
+      "ONATEL",
+      "Av, de la Nation",
+      "Terminus Naba Koom"
+    ]
+  },
+  {
+    "city": "Ouagadougou",
+    "line_number": "Ligne 6B",
+    "description": "Voie de contournement (route de Kaya) - Terminus Naaba Koom",
+    "stops": [
+      "Voie de contournement",
+      "Station SODIGAZ",
+      "Ancien Péage",
+      "Nioko II",
+      "Marché de Nioko",
+      "Cité Universitaire Kossodo",
+      "Rond",
+      "point de Kossodo",
+      "Siège de la SOTRACO",
+      "Faso Parc",
+      "l'hotel Silmandé",
+      "CHU Yalgado OUEDRAOGO",
+      "SP/CNLS",
+      "OST",
+      "Av. de l'indépendance",
+      "Trésor public",
+      "DG Police nationale",
+      "SONAPOST siège",
+      "Maison du peuple",
+      "Terminus Naaba Koom"
+    ]
+  },
+  {
+    "city": "Ouagadougou",
+    "line_number": "Ligne 9",
+    "description": "Saaba - Terminus Naba koom (via Taabtenga et maison de la Femme)",
+    "stops": [
+      "Mairie de Saaba",
+      "Marché de Saaba",
+      "Marché de Taabtenga",
+      "Station OTAM",
+      "Musée National",
+      "Maison de la Femme",
+      "Jardin Simporé",
+      "Pharmacie Trinité",
+      "Boinsé Yaar",
+      "Archevéché",
+      "Clinique Philadelphie",
+      "Trésor public",
+      "Av. de l'indépendance",
+      "DG Police Nationale",
+      "SONAPOST siège",
+      "Maison du peuple",
+      "Terminus Naba Koom"
+    ]
+  },
+  {
+    "city": "Ouagadougou",
+    "line_number": "Ligne 10",
+    "description": "CHU de Tengandogo - Terminus zone des écoles",
+    "stops": [
+      "CHU de Tengandogo",
+      "Cimétière route de Saponé",
+      "Rond",
+      "point de la Patte",
+      "d'Oie",
+      "Station OTAM Paaglayiri",
+      "Mosquée Saha",
+      "Ecole des Télécommunications",
+      "Marché de Naab Raaga",
+      "Lycée Bambata",
+      "Lycée Marien N'Gouabi",
+      "Place de la Nation",
+      "Maison du peuple",
+      "Rond",
+      "point des Nations Unies",
+      "DG Police nationale",
+      "Terminus Zone des écoles"
+    ]
+  },
+  {
+    "city": "Ouagadougou",
+    "line_number": "Ligne 11",
+    "description": "Station SOPEDIS de Rimkiéta - Terminus Naaba Koom (via Sankaryaré)",
+    "stops": [
+      "Naaba Koom",
+      "Rondpoint Nations Unies – Sankaryaaré",
+      "Avenue 56 – Marché de 10 – Laafi yaar",
+      "Marché Rimkieta",
+      "Terminus Station SODEPIS de Rimkiéta"
+    ]
+  },
+  {
+    "city": "Ouagadougou",
+    "line_number": "Ligne 12",
+    "description": "Bonheur ville - Terminus zone des écoles",
+    "stops": [
+      "Rond",
+      "point de la Transition",
+      "75ème anniversaire",
+      "Savane FM",
+      "Station PETROFA Cissin",
+      "Lycée Mixte de Gounghin",
+      "Stade Réné MONORY",
+      "Terrain du Mogho Naba",
+      "Cathédrale",
+      "Hôtel de ville",
+      "SOBCA",
+      "Rond",
+      "point des Nations Unies",
+      "DG Police nationale",
+      "Terminus Zone des écoles"
+    ]
+  },
+  {
+    "city": "Ouagadougou",
+    "line_number": "Ligne 13",
+    "description": "Kamboinsin - Terminus zone des écoles (via échangeur du Nord)",
+    "stops": [
+      "Terminus PMK",
+      "Station ORYX",
+      "Marché de Kamboinsin",
+      "Séminaire de Kossoghin",
+      "Hopital Paul 6",
+      "Echangeur du Nord",
+      "Caisse populaire de Nonsin",
+      "Marché de 10 yaar",
+      "Marché de Larlé",
+      "Lycée Marien N'Gouabi",
+      "Place de la Nation",
+      "Maison du peuple",
+      "Rond",
+      "point des Nations Unies",
+      "DG Police nationale",
+      "Terminus zone des écoles"
+    ]
+  },
+  {
+    "city": "Ouagadougou",
+    "line_number": "Ligne 15",
+    "description": "Naaba Koom - Terminus Belle Ville (Watinoma)",
+    "stops": [
+      "NK",
+      "AV. Mgr Thevenoud",
+      "Stade municipal",
+      "Terrain Mogho Naaba",
+      "Naab Raaga",
+      "Mosquée Saha",
+      "CNSS",
+      "Rond point des Tensoba(Patte d’oie)",
+      "Feu tricolore Cité ASECNA",
+      "Cité ASECNA",
+      "Lycée Trikouni",
+      "Rondpoint Faso Kosam",
+      "Lycée Benaja",
+      "Château ONEA",
+      "SOMOUF Oil",
+      "Station Shell",
+      "CEB Ouaga 6",
+      "Terminus Belle ville(Watinoma)"
+    ]
+  },
+  {
+    "city": "Ouagadougou",
+    "line_number": "Ligne 16",
+    "description": "Bassinko - Terminus Naba Koom",
+    "stops": [
+      "Terminus central NK",
+      "Echangeur du Nord",
+      "Lycée Municipal de Ouagadougou",
+      "Cité AZIMMO",
+      "Lycée Avé Maria",
+      "Marché de bétail",
+      "RN2",
+      "Eau maman (Tronçon cités de Bassinko)"
+    ]
+  },
+  {
+    "city": "Ouagadougou",
+    "line_number": "Ligne 17",
+    "description": "Boassa - Terminus zone des écoles",
+    "stops": [
+      "Boassa",
+      "Sandogo",
+      "Alimentation bon Samaritin",
+      "Boulangerie wend konta",
+      "ONEA siège (pissy)",
+      "SONABHY",
+      "Echangeur de l'ouest",
+      "Station TOTAL Gounghin",
+      "Maison de retraite Antoine Nanga",
+      "DR LONAB",
+      "Ecole nationale de la Police",
+      "ESCO IGES",
+      "service de passports",
+      "Place de la Nation",
+      "Maison du peuple",
+      "rond",
+      "point des Nation Unies",
+      "DG police nationale",
+      "Terminus Zone des écoles"
+    ]
+  },
+  {
+    "city": "Ouagadougou",
+    "line_number": "Ligne intercommunale",
+    "description": "Ouagadougou - Koubri",
+    "stops": [
+      "Marché de Koubri",
+      "Mairie de Koubri",
+      "Collège Saint Antoine",
+      "Ecole de Kiendpalgo",
+      "Château d'eau de Balkuy (DRB Balkuy)",
+      "Village Nongtaaba",
+      "Total Trame d'accueil Ouaga 2000",
+      "Camp Baba SY",
+      "CCVA",
+      "Gare routière"
+    ]
+  },
+  {
+    "city": "Ouagadougou",
+    "line_number": "Ligne intercommunale",
+    "description": "Ouagadougou - Ziniaré",
+    "stops": [
+      "Du terminus de Ziniaré sis à l’ex gare routière en passant par le CHR de Ziniaré",
+      "Bangrin",
+      "Nongana",
+      "Commune de Loumbila Cité Wendpanga",
+      "Nioko II",
+      "rond point Kossodo",
+      "SOTRACO siège",
+      "hôtel sopatel",
+      "CHU Yalgado OUEDRAOGO",
+      "SP/CNLS",
+      "AV de l'indépendance",
+      "Trésor public",
+      "DG Police National",
+      "SONAPOST",
+      "Rond",
+      "point des Nations Unies",
+      "Maison du peuple",
+      "Terminus Naba Koom"
+    ]
+  },
+  {
+    "city": "Ouagadougou",
+    "line_number": "Ligne Spéciale UO1",
+    "description": "De la cité universitaire de KOSSODO au SIAO via UO1",
+    "stops": [
+      "Cour de la cité",
+      "Mosquée de vendredi de KOSSODO",
+      "Tan Aliz",
+      "Boulangerie Somgandé",
+      "Echangeur de l’Est",
+      "LTO",
+      "UO1",
+      "ISIG siège",
+      "Pharmacie Nemadis",
+      "SIAO"
+    ]
+  },
+  {
+    "city": "Ouagadougou",
+    "line_number": "Ligne Spéciale UO1",
+    "description": "De la cité universitaire de la patte d’oie à UO1 via SIAO",
+    "stops": [
+      "Cité universitaire de la patte d’oie",
+      "Échangeur Ouaga 2000 (route de Pô)",
+      "CMA du 30",
+      "SIAO",
+      "Pédiatrie Charles DE GAULE",
+      "TSR",
+      "UO1"
+    ]
+  },
+  {
+    "city": "Ouagadougou",
+    "line_number": "Ligne Spéciale UO1",
+    "description": "De la cité Larlée à UO1",
+    "stops": [
+      "Larlé",
+      "STAF (cité Brigitte PROS)",
+      "Marien N’gouabi",
+      "SOBCA",
+      "UO1"
+    ]
+  },
+  {
+    "city": "Ouagadougou",
+    "line_number": "UTS1",
+    "description": "Axe 1",
+    "stops": [
+      "UO1",
+      "CHU Charles DE GAULLE",
+      "Echangeur de l’Est",
+      "Carrefour de Saaba",
+      "Bargo",
+      "Péage",
+      "Université Thomas SANKARA"
+    ]
+  },
+  {
+    "city": "Ouagadougou",
+    "line_number": "UTS2",
+    "description": "Axe 2",
+    "stops": [
+      "SIAO",
+      "CHU Charles DE GAULLE",
+      "Echangeur de l’Est",
+      "Carrefour de Saaba",
+      "Bargo",
+      "Péage",
+      "Université Thomas SANKARA"
+    ]
+  },
+  {
+    "city": "Ouagadougou",
+    "line_number": "UTS3",
+    "description": "Axe 3",
+    "stops": [
+      "CHU Yalgado OUEDRAOGO",
+      "ENAREF",
+      "Echangeur de l’Est",
+      "Carrefour de Saaba",
+      "Bargo",
+      "Péage",
+      "Université Thomas SANKARA"
+    ]
+  },
+  {
+    "city": "Ouagadougou",
+    "line_number": "Ligne intercommunale",
+    "description": "Ouagadougou - Pabré",
+    "stops": [
+      "Du terminus Mémorial Thomas SANKARA (MTS) à la mosquéé de vendredi de PABRE en passant par la Carfo Paspanga",
+      "la RTB",
+      "le rond point des Nations unies",
+      "La Maison du Peuple",
+      "La place de la Nation",
+      "le lycée Marien N'Gouabi",
+      "le lycée kolog Naba",
+      "le CMA Paul VI",
+      "le Séminaire de Kossoghin",
+      "le lycée de l'Alliance Chrétienne (LAC)",
+      "Le PMK",
+      "Mosquée de vendredi de Pabré"
+    ]
+  }
+]

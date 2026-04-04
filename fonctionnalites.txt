@@ -1,0 +1,273 @@
+
+1. Contexte général
+
+Dans les grandes villes africaines, et particulièrement à Ouagadougou, les transports en commun (bus SOTRACO, minibus, lignes informelles) jouent un rôle essentiel dans la mobilité quotidienne. Pourtant, leur usage reste complexe et peu attractif à cause de plusieurs difficultés :
+
+Lignes mal connues du grand public
+
+Arrêts non signalés ou informels
+
+Absence d’horaires fiables
+
+Manque d’informations en temps réel
+
+Forte dépendance aux motos-taxis, plus coûteux et parfois dangereux
+
+Dôrô Wéré (qui signifie "le chemin clair") est une application mobile conçue pour démocratiser l’accès aux transports en commun, en les rendant compréhensibles, visibles et fiables grâce au numérique et à l’intelligence collective.
+
+2. Vision et objectifs
+🎯 Vision
+
+Devenir le compagnon numérique de référence pour les déplacements urbains en transports en commun.
+
+🎯 Objectifs principaux
+
+Faciliter les déplacements quotidiens
+
+Réduire les coûts de transport pour les usagers
+
+Améliorer la sécurité et la planification des trajets
+
+Valoriser les transports publics existants
+
+Encourager une mobilité urbaine durable
+
+3. Public cible
+
+Étudiants
+
+Travailleurs urbains
+
+Nouveaux arrivants en ville
+
+Usagers occasionnels des transports
+
+Population à faible accès à l’information numérique
+
+4. Fonctionnalités détaillées
+🧭 4.1 Recherche et planification de trajet (fonction cœur)
+
+L’utilisateur peut rechercher un trajet à partir de :
+
+Sa position actuelle (géolocalisation)
+
+Un point de départ manuel
+
+Un point de destination
+
+L’application propose :
+
+Les lignes de bus/minibus à emprunter
+
+Les arrêts les plus proches pour chaque ligne
+
+Les correspondances éventuelles
+
+La distance à pied jusqu’à l’arrêt
+
+Une estimation du temps total
+
+Une estimation du coût du trajet (en F CFA)
+
+👉 Objectif : permettre à n’importe qui de comprendre comment se déplacer en transports en commun, même sans expérience préalable.
+
+🚏 4.2 Identification des arrêts les plus proches
+
+Détection automatique des arrêts proches via GPS
+
+Affichage des lignes passant par chaque arrêt
+
+Indication de la distance et du temps de marche
+
+👉 Utile pour les usagers ne connaissant pas leur environnement immédiat.
+
+🚍 4.3 Géolocalisation en temps réel des bus (crowdsourcing)
+Principe
+
+L’application utilise par défaut la localisation des utilisateurs
+
+Lorsqu’un utilisateur se trouve dans un bus, sa position GPS est anonymement utilisée
+
+Les positions de plusieurs utilisateurs sont agrégées pour représenter la position du bus
+
+Ce que voit le passager à l’arrêt
+
+La position actuelle du bus sur la carte
+
+La direction du bus
+
+Le temps estimé d’arrivée (ETA)
+
+👉 Aucun matériel GPS embarqué n’est requis sur les bus.
+
+🗺️ 4.4 Carte interactive intelligente
+
+Fonctionnalités :
+
+Affichage des lignes de transport
+
+Visualisation des arrêts (officiels et informels)
+
+Bus en déplacement en temps réel
+
+Filtrage par ligne ou par zone
+
+Mode hors-ligne (téléchargement de la carte)
+
+👉 La carte est le support visuel central de l’application.
+
+�� 4.5 Estimation du temps et du coût du trajet
+
+L’estimation est basée sur :
+
+La distance totale
+
+La vitesse moyenne des lignes
+
+Les correspondances
+
+L’historique des trajets
+
+Le coût est estimé selon :
+
+Le type de ligne
+
+Le nombre de segments
+
+Les tarifs moyens pratiqués
+
+👉 Fonction clé pour les étudiants et travailleurs à budget limité.
+
+⚠️ 4.6 Alertes communautaires
+
+Les utilisateurs peuvent signaler :
+
+Bus plein
+
+Incident sur la ligne
+
+Panne du bus
+
+Arrêt déplacé temporairement
+
+Route bloquée
+
+Caractéristiques :
+
+Alertes géolocalisées
+
+Durée de validité limitée
+
+Validation communautaire
+
+👉 Améliore la fiabilité globale du système.
+
+👤 4.7 Avatar et proximité sociale (sans messagerie)
+
+Chaque utilisateur dispose d’un avatar
+
+Les avatars sont visibles uniquement par les amis
+
+Détection lorsque plusieurs amis sont :
+
+au même arrêt
+
+dans le même bus
+
+dans la même zone
+
+Fonctionnalités associées :
+
+Notifications de proximité
+
+Option d’invisibilité
+
+Paramètres de confidentialité avancés
+
+👉 Objectif : humaniser l’expérience sans compromettre la vie privée.
+
+5. Gestion de la vie privée et sécurité
+
+Localisation désactivable à tout moment
+
+Précision GPS ajustable
+
+Avatars visibles uniquement par consentement
+
+Données anonymisées pour la géolocalisation bus
+
+👉 La confiance utilisateur est une priorité absolue.
+
+6. Architecture fonctionnelle (vue simplifiée)
+Mobile
+
+GPS (avant-plan / arrière-plan)
+
+Carte interactive
+
+Cache hors-ligne
+
+Backend
+
+Gestion utilisateurs
+
+Données temps réel (positions bus)
+
+Calcul d’itinéraires
+
+Alertes
+
+Données
+
+Lignes
+
+Arrêts
+
+Positions GPS
+
+Historique des trajets
+
+7. Déploiement progressif
+Phase 1 – MVP
+
+Recherche de trajet
+
+Carte interactive
+
+Géolocalisation bus
+
+Estimation coût/durée
+
+Alertes
+
+Phase 2 – Amélioration
+
+Optimisation ETA
+
+Historique utilisateur
+
+Favoris
+
+Phase 3 – Social avancé
+
+Avatar amélioré
+
+Interactions sociales (hors messagerie)
+
+8. Impact attendu
+
+Amélioration de l’usage des transports publics
+
+Réduction des coûts de déplacement
+
+Gain de temps pour les usagers
+
+Meilleure organisation urbaine
+
+Contribution à une ville plus durable
+
+9. Conclusion
+
+Dôrô Wéré n’est pas seulement une application, mais une solution de mobilité urbaine intelligente, pensée pour les réalités locales, reposant sur la technologie, la communauté et l’accessibilité.
+
+👉 Une base solide pour un projet académique, un concours d’innovation ou une future startup.

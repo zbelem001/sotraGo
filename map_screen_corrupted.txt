@@ -1,0 +1,670 @@
+import 'dart:convert';
+import 'dart:ui';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:geolocator/geolocator.dart';
+import '../theme/app_colors.dart';
+import '../models/sotraco_line.dart';
+import '../services/routing_service.dart';
+import 'routing_screen.dart';
+
+class MapScreen extends StatefulWidget {
+  const MapScreen({super.key});
+
+  @override
+  State<MapScreen> createState() => _MapScreenState();
+}
+
+class _MapScreenState extends State<MapScreen> {
+  final MapController _mapController = MapController();
+  final LatLng _ouagaCenter = const LatLng(12.3714, -1.5197);
+
+  List<SotracoLine> _allLines = [];
+  SotracoLine? _selectedLine;
+  Itinerary? _selectedItinerary;
+  bool _isLoading = true;
+  LatLng? _currentLocation;
+  bool _isLocating = false;
+
+  Color _getColorForLine(String lineNumber) {
+    const List<Color> colors = [
+      Colors.red,
+      Colors.blue,
+      Colors.green,
+      Colors.orange,
+      Colors.purple,
+      Colors.teal,
+      Colors.pink,
+      Colors.amber,
+      Colors.indigo,
+      Colors.cyan,
+      Colors.brown,
+      Colors.deepOrange,
+    ];
+    int hash = lineNumber.hashCode.abs();
+    return colors[hash % colors.length];
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBusData();
+    _checkLocationPermission();
+  }
+
+  Future<void> _checkLocationPermission() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return;
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      return;
+    }
+
+    _getCurrentLocation();
+  }
+
+  Future<void> _getCurrentLocation() async {
+    setState(() => _isLocating = true);
+    try {
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+      setState(() {
+        _currentLocation = LatLng(position.latitude, position.longitude);
+        _isLocating = false;
+      });
+
+      // Optionnel: Centrer la carte sur l'utilisateur
+      // _mapController.move(_currentLocation!, 15.0);
+    } catch (e) {
+      debugPrint("Erreur géolocalisation: $e");
+      setState(() => _isLocating = false);
+    }
+  }
+
+  Future<void> _loadBusData() async {
+    try {
+      final String jsonString = await rootBundle.loadString(
+        'assets/data/sotraco_ouaga.json',
+      );
+      final List<dynamic> jsonList = json.decode(jsonString);
+
+      List<SotracoLine> lines = jsonList
+          .map((data) => SotracoLine.fromJson(data))
+          .where((line) => line.routeSegments.isNotEmpty)
+          .toList();
+
+      setState(() {
+        _allLines = lines;
+        _selectedLine = lines.isNotEmpty ? lines.first : null;
+        _isLoading = false;
+      });
+
+      _fitMapToSelectedLine();
+    } catch (e) {
+      debugPrint("Erreur lors du chargement des données SOTRACO: $e");
+      setState(() => _isLoading = false);
+    }
+  }
+
+  void _fitMapToSelectedLine() {
+    if (_selectedLine == null || _selectedLine!.routeSegments.isEmpty) return;
+
+    // Extraire tous les points pour recentrer la carte globalement
+    List<LatLng> allPoints = [];
+    for (var segment in _selectedLine!.routeSegments) {
+      allPoints.addAll(segment);
+    }
+
+    if (allPoints.isNotEmpty) {
+      final bounds = LatLngBounds.fromPoints(allPoints);
+      Future.delayed(const Duration(milliseconds: 300), () {
+        _mapController.fitCamera(
+          CameraFit.bounds(bounds: bounds, padding: const EdgeInsets.all(60)),
+        );
+      });
+    }
+  }
+
+  void _fitMapToItinerary(Itinerary itinerary) {
+    List<LatLng> allPoints = [];
+    if (_currentLocation != null) allPoints.add(_currentLocation!);
+
+    for (var segment in itinerary.segments) {
+      for (var routeSegment in segment.line.routeSegments) {
+        allPoints.addAll(routeSegment);
+      }
+    }
+
+    if (allPoints.isNotEmpty) {
+      final bounds = LatLngBounds.fromPoints(allPoints);
+      Future.delayed(const Duration(milliseconds: 300), () {
+        _mapController.fitCamera(
+          CameraFit.bounds(bounds: bounds, padding: const EdgeInsets.all(60)),
+        );
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final String tileUrl = isDark
+        ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+        : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+
+    // List des polylines (lignes sur la carte)
+    final List<Polyline<Object>> polylinesToDraw = [];
+
+    // List des marqueurs à afficher
+    final List<Marker> markers = [];
+
+    if (_selectedLine != null) {
+      Color c = _getColorForLine(_selectedLine!.lineNumber);
+      polylinesToDraw.addAll(
+        _selectedLine!.routeSegments.map(
+          (s) => Polyline<Object>(points: s, color: c, strokeWidth: 3.5),
+        ),
+      );
+
+      // 1. Ajouter les arrêts intermédiaires
+      for (int i = 0; i < _selectedLine!.stops.length; i++) {
+        var stop = _selectedLine!.stops[i];
+        bool isStart = i == 0;
+        bool isEnd = i == _selectedLine!.stops.length - 1;
+
+        // On saute le départ et l'arrivée, ils ont leurs propres gros marqueurs plus bas
+        if (isStart || isEnd) continue;
+
+        if (stop.isMainStop) {
+          // Arrêt Principal (avec nom officiel) - Simple point avec bordure blanche
+          markers.add(
+            Marker(
+              point: stop.location,
+              width: 16,
+              height: 16,
+              alignment: const Alignment(0, 0),
+              child: Tooltip(
+                message: stop.name,
+                triggerMode: TooltipTriggerMode.tap,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.primary, width: 4),
+                    boxShadow: const [
+                      BoxShadow(color: Colors.black26, blurRadius: 4),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        } else {
+          // Arrêt Mineur (simple point sur la route)
+          markers.add(
+            Marker(
+              point: stop.location,
+              width: 12,
+              height: 12,
+              alignment: const Alignment(0, 0),
+              child: Tooltip(
+                message: "Arrêt (non nommé)",
+                triggerMode: TooltipTriggerMode.tap,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.primary, width: 2),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+      }
+
+      // 2. Le vrai point de Départ (premier arrêt si dispo, sinon premier point géo)
+      LatLng? startPoint = _selectedLine!.stops.isNotEmpty
+          ? _selectedLine!.stops.first.location
+          : (_selectedLine!.routeSegments.isNotEmpty && _selectedLine!.routeSegments.first.isNotEmpty ? _selectedLine!.routeSegments.first.first : null);
+
+      // 3. Le vrai point d'Arrivée (dernier arrêt si dispo, sinon dernier point géo)
+      LatLng? endPoint = _selectedLine!.stops.isNotEmpty
+          ? _selectedLine!.stops.last.location
+          : (_selectedLine!.routeSegments.isNotEmpty && _selectedLine!.routeSegments.last.isNotEmpty ? _selectedLine!.routeSegments.last.last : null);
+
+      if (startPoint != null) {
+        markers.add(
+          Marker(
+            point: startPoint,
+            width: 24,
+            height: 24,
+            alignment: const Alignment(0, 0),
+            child: Tooltip(
+              message: "Point A : ${_selectedLine!.departure}",
+              preferBelow: false,
+              triggerMode: TooltipTriggerMode.tap,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.greenAccent,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 3),
+                  boxShadow: const [
+                    BoxShadow(color: Colors.black26, blurRadius: 4),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+
+      if (endPoint != null) {
+        markers.add(
+          Marker(
+            point: endPoint,
+            width: 24,
+            height: 24,
+            alignment: const Alignment(0, 0),
+            child: Tooltip(
+              message: "Point B : ${_selectedLine!.arrival}",
+              preferBelow: false,
+              triggerMode: TooltipTriggerMode.tap,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppColors.alert, // Rouge ou autre couleur vive
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 3),
+                  boxShadow: const [
+                    BoxShadow(color: Colors.black26, blurRadius: 4),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+    } else if (_selectedItinerary != null) {
+      Color c = _getColorForLine(_selectedItinerary!.segments.first.line.lineNumber);
+      for (var segment in _selectedItinerary!.segments) {
+        polylinesToDraw.addAll(segment.line.routeSegments.map(
+          (s) => Polyline<Object>(points: s, color: c, strokeWidth: 3.5),
+        ));
+      }
+    } else {
+      for (var line in _allLines) {
+        Color c = _getColorForLine(line.lineNumber);
+        polylinesToDraw.addAll(
+          line.routeSegments.map(
+            (s) => Polyline<Object>(points: s, color: c, strokeWidth: 2.0),
+          ),
+        );
+      }
+    }
+
+    if (_currentLocation != null) {
+      markers.add(
+        Marker(
+          point: _currentLocation!,
+          width: 40,
+          height: 40,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.blueAccent.withOpacity(0.3),
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Container(
+                width: 15,
+                height: 15,
+                decoration: BoxDecoration(
+                  color: Colors.blue,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2),
+                  boxShadow: const [
+                    BoxShadow(color: Colors.black26, blurRadius: 4),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (_selectedItinerary != null) {
+      var seg = _selectedItinerary!.segments.first;
+      final distance = const Distance();
+
+      // Arrêt de montée
+      markers.add(
+        Marker(
+          point: seg.boardStop.location,
+          width: 30,
+          height: 30,
+          child: const Icon(
+            Icons.directions_walk,
+            color: Colors.green,
+            size: 30,
+          ),
+        ),
+      );
+
+      // Arrêt de descente du bus
+      markers.add(
+        Marker(
+          point: seg.alightStop.location,
+          width: 30,
+          height: 30,
+          child: const Icon(Icons.directions_bus, color: Colors.red, size: 30),
+        ),
+      );
+
+      // Destination finale (si besoin de marcher plus de 50 mètres après la descente)
+      double distToEnd = distance.as(
+        LengthUnit.Meter,
+        seg.alightStop.location,
+        _selectedItinerary!.endLocation,
+      );
+      if (distToEnd > 50) {
+        markers.add(
+          Marker(
+            point: _selectedItinerary!.endLocation,
+            width: 40,
+            height: 40,
+            child: const Icon(Icons.place, color: Colors.redAccent, size: 40),
+          ),
+        );
+      }
+    }
+
+    return Scaffold(
+      body: Stack(
+        children: [
+          FlutterMap(
+            mapController: _mapController,
+            options: MapOptions(
+              initialCenter: _ouagaCenter,
+              initialZoom: 13.5,
+              maxZoom: 18.0,
+              minZoom: 11.0,
+              interactionOptions: const InteractionOptions(
+                flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+              ),
+            ),
+            children: [
+              TileLayer(
+                urlTemplate: tileUrl,
+                userAgentPackageName: 'com.sotraco.sira',
+              ),
+
+              if (polylinesToDraw.isNotEmpty)
+                PolylineLayer(
+                  polylines: polylinesToDraw,
+                ),
+
+              if (markers.isNotEmpty) MarkerLayer(markers: markers),
+            ],
+          ),
+
+          // ... (Le reste de l'UI est identique)
+          if (_selectedItinerary == null)
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 16,
+              left: 16,
+              right: 16,
+              child: _buildPredictiveSearchBar(),
+            ),
+
+          if (_selectedItinerary != null)
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 16,
+              left: 16,
+              child: FloatingActionButton(
+                heroTag: 'close_itinerary',
+                backgroundColor: Colors.white,
+                mini: true,
+                onPressed: () => setState(() => _selectedItinerary = null),
+                child: const Icon(Icons.close, color: Colors.black),
+              ),
+            ),
+
+          if (_isLoading)
+            Center(
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkSlate : Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: const [
+                    BoxShadow(color: Colors.black26, blurRadius: 10),
+                  ],
+                ),
+                child: const Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircularProgressIndicator(color: AppColors.primary),
+                    SizedBox(height: 16),
+                    Text("Chargement du réseau SOTRACO..."),
+                  ],
+                ),
+              ),
+            ),
+
+          if (!_isLoading && _allLines.isNotEmpty && _selectedItinerary == null)
+            Positioned(bottom: 120, left: 16, child: _buildLineSelector()),
+
+          if (_selectedItinerary != null)
+            Positioned(
+              bottom: 120,
+              left: 16,
+              right: 80, // Laisse de la place pour les FABs
+              child: Card(
+                color: isDark ? AppColors.darkSlate : Colors.white,
+                elevation: 8,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        "Prendre la ${_selectedItinerary!.segments.first.line.name}",
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "Monter à : ${_selectedItinerary!.segments.first.boardStop.name}",
+                      ),
+                      Text(
+                        "Descendre à : ${_selectedItinerary!.segments.first.alightStop.name}",
+                      ),
+                      const Divider(),
+                      Text(
+                        "⏳ ${_selectedItinerary!.estimatedTime.toStringAsFixed(0)} min  |  🚶 ${_selectedItinerary!.totalWalkingDistance.toStringAsFixed(0)} m  |  💰 ${_selectedItinerary!.totalCost} FCFA",
+                        style: const TextStyle(
+                          color: Colors.green,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+          Positioned(
+            bottom: 120,
+            right: 16,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Bouton Itinéraire
+                FloatingActionButton(
+                  heroTag: 'route_btn',
+                  backgroundColor: Colors.green.shade600,
+                  child: const Icon(Icons.directions, color: Colors.white),
+                  onPressed: () async {
+                    if (_currentLocation == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Veuillez patienter, obtention de votre position...',
+                          ),
+                        ),
+                      );
+                      return;
+                    }
+                    final itinerary = await Navigator.push<Itinerary>(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => RoutingScreen(
+                          currentLocation: _currentLocation!,
+                          allLines: _allLines,
+                        ),
+                      ),
+                    );
+
+                    if (itinerary != null) {
+                      setState(() {
+                        _selectedItinerary = itinerary;
+                        _selectedLine =
+                            null; // Désélectionner la ligne simple si active
+                      });
+                      _fitMapToItinerary(itinerary);
+                    }
+                  },
+                ),
+                const SizedBox(height: 16),
+                // Bouton Ma position
+                FloatingActionButton(
+                  heroTag: 'location_btn',
+                  backgroundColor: AppColors.primary,
+                  child: _isLocating
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Icon(Icons.my_location, color: Colors.white),
+                  onPressed: () {
+                    if (_currentLocation != null) {
+                      // _mapController.move(_currentLocation!, 15.0);
+                    } else {
+                      _getCurrentLocation();
+                    }
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+                  },
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+    return Container(
+      width: MediaQuery.of(context).size.width * 0.8,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSlate : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10)],
+        border: Border.all(color: AppColors.primary, width: 1.5),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<SotracoLine>(
+          isExpanded: true,
+          value: _selectedLine,
+          icon: const Icon(Icons.directions_bus, color: AppColors.primary),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : AppColors.darkSlate,
+          ),
+          onChanged: (SotracoLine? newLine) {
+            if (newLine != null) {
+              setState(() => _selectedLine = newLine);
+              _fitMapToSelectedLine();
+            }
+          },
+          items: _allLines.map((SotracoLine line) {
+            return DropdownMenuItem<SotracoLine>(
+              value: line,
+              child: Text(
+                line.name.isNotEmpty
+                    ? line.name
+                          .replaceAll(
+                            RegExp(r'Terminus ', caseSensitive: false),
+                            '',
+                          )
+                          .replaceAll('➔', '↔')
+                    : "Ligne ${line.lineNumber}",
+                overflow: TextOverflow.ellipsis,
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPredictiveSearchBar() {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final Color glassColor = isDark
+        ? AppColors.darkSlate.withOpacity(0.8)
+        : Colors.white.withOpacity(0.9);
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          decoration: BoxDecoration(
+            color: glassColor,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+          ),
+          child: TextField(
+            decoration: InputDecoration(
+              hintText: 'Où allez-vous ? (ex: Zogona, SIAO)',
+              hintStyle: TextStyle(
+                color: isDark ? Colors.grey.shade400 : Colors.grey.shade500,
+              ),
+              prefixIcon: const Icon(Icons.search, color: AppColors.primary),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 16,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

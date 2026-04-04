@@ -1,0 +1,21 @@
+--- lib/screens/map_screen.dart
++++ lib/screens/map_screen.dart
+@@ -239,21 +239,15 @@
+       // 2. Le vrai point de Départ (premier arrêt si dispo, sinon premier point géo)
+       LatLng? startPoint = _selectedLine!.stops.isNotEmpty
+           ? _selectedLine!.stops.first.location
+-          : ((busSegments.isNotEmpty && busSegments.first.isNotEmpty)
+-                ? busSegments.first.first
+-                : null);
++          : (_selectedLine!.routeSegments.isNotEmpty && _selectedLine!.routeSegments.first.isNotEmpty ? _selectedLine!.routeSegments.first.first : null);
+ 
+       // 3. Le vrai point d'Arrivée (dernier arrêt si dispo, sinon dernier point géo)
+       LatLng? endPoint = _selectedLine!.stops.isNotEmpty
+           ? _selectedLine!.stops.last.location
+-          : ((busSegments.isNotEmpty && busSegments.last.isNotEmpty)
+-                ? busSegments.last.last
+-                : null);
++          : (_selectedLine!.routeSegments.isNotEmpty && _selectedLine!.routeSegments.last.isNotEmpty ? _selectedLine!.routeSegments.last.last : null);
+ 
+       if (startPoint != null) {
+         markers.add(
