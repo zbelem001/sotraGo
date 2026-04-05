@@ -1116,7 +1116,7 @@ class MapScreenState extends State<MapScreen> {
 
           if (_selectedItinerary != null)
             Positioned(
-              bottom: 120,
+              bottom: 90,
               left: 16,
               right: 80, // Laisse de la place pour les FABs
               child: Card(
@@ -1160,7 +1160,7 @@ class MapScreenState extends State<MapScreen> {
             ),
 
           Positioned(
-            bottom: 120,
+            bottom: 90,
             right: 16,
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -1258,7 +1258,7 @@ class MapScreenState extends State<MapScreen> {
           ),
           // Bouton Mode Vue Carte / Satellite (bas à gauche)
           Positioned(
-            bottom: 120,
+            bottom: 90,
             left: 16,
             child: FloatingActionButton(
               heroTag: 'map_type_btn',
