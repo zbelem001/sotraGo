@@ -934,30 +934,6 @@ class MapScreenState extends State<MapScreen> {
         ),
       );
     }
-
-    if (_selectedItinerary != null) {
-      var seg = _selectedItinerary!.segments.first;
-      markers.add(
-        Marker(
-          point: seg.boardStop.location,
-          width: 30,
-          height: 30,
-          child: const Icon(
-            Icons.directions_walk,
-            color: Colors.green,
-            size: 30,
-          ),
-        ),
-      );
-      markers.add(
-        Marker(
-          point: seg.alightStop.location,
-          width: 30,
-          height: 30,
-          child: const Icon(Icons.directions_bus, color: Colors.red, size: 30),
-        ),
-      );
-    }
     // --- END LOGIC ---
     return Scaffold(
       body: Stack(
