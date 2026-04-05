@@ -1,91 +1,21 @@
-import 'package:flutter/material.dart';
-import 'map_screen.dart';
-import 'home_screen.dart';
-import 'lines_screen.dart';
-import 'events_screen.dart';
-import '../services/location_service.dart';
-import '../services/socket_service.dart';
-import '../services/api_service.dart';
+import os
 
+filepath = 'lib/screens/main_screen.dart'
+with open(filepath, 'r') as f:
+    text = f.read()
 
-class MainScreen extends StatefulWidget {
-  final int initialIndex;
-  final String? initialMapLine;
+# On va supprimer la partie "if (_isLoading) { return Scaffold(..."
+# Et à la place, ajouter un Stack dans le build pour overlay_isLoading
 
-  const MainScreen({super.key, this.initialIndex = 0, this.initialMapLine});
+# Couper la méthode build actuelle
+split_parts = text.split("  @override\n  Widget build(BuildContext context) {")
+before_build = split_parts[0]
+build_and_after = split_parts[1]
 
-  @override
-  State<MainScreen> createState() => _MainScreenState();
-}
+# Trouver le début du vrai return
+return_pop_scope_index = build_and_after.find("return PopScope(")
 
-class _MainScreenState extends State<MainScreen> {
-  bool _isLoading = true;
-  late int _currentIndex;
-  late List<Widget> _pages;
-  final GlobalKey<MapScreenState> _mapKey = GlobalKey<MapScreenState>();
-
-  @override
-  void initState() {
-    super.initState();
-    _currentIndex = widget.initialIndex;
-    _pages = [
-      const HomeScreen(),
-      MapScreen(key: _mapKey, initialLineNumber: widget.initialMapLine),
-      const LinesScreen(),
-      const EventsScreen(),
-    ];
-    _initApp();
-  }
-
-  Future<void> _initApp() async {
-    // 1. Initialiser le Socket
-    SocketService().initSocket();
-
-    // 2. Initialiser la localisation
-    await LocationService().init();
-
-    // 3. Charger les données complexes (les lignes de bus) en arrière-plan
-    try {
-      await ApiService().fetchLinesData();
-    } catch (e) {
-      debugPrint("Erreur lors du pré-chargement des lignes: $e");
-    }
-
-    // Sécurité visuelle ou pour laisser les données s'installer
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
-  void _onTabTapped(int index) {
-    // Si on veut aller sur la map (1) ou les lignes (2) et que le mode éclaireur est désactivé
-    if ((index == 1 || index == 2) && !LocationService().isScoutModeEnabled) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            "Veuillez activer le Mode Éclaireur sur l'accueil pour accéder à la carte et aux lignes.",
-          ),
-          backgroundColor: Colors.redAccent,
-          duration: Duration(seconds: 3),
-        ),
-      );
-      return;
-    }
-
-    if (index == 1 && _currentIndex != 1) {
-      _mapKey.currentState?.resetToAllLines();
-    }
-
-    setState(() {
-      _currentIndex = index;
-    });
-  }
-
-  @override
+new_build = """  @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
@@ -181,3 +111,7 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 }
+"""
+
+with open(filepath, 'w') as f:
+    f.write(before_build + new_build)
