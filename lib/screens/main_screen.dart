@@ -4,8 +4,6 @@ import 'home_screen.dart';
 import 'lines_screen.dart';
 import 'events_screen.dart';
 import '../services/location_service.dart';
-import '../services/socket_service.dart';
-import '../services/api_service.dart';
 
 
 class MainScreen extends StatefulWidget {
@@ -19,7 +17,6 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  bool _isLoading = true;
   late int _currentIndex;
   late List<Widget> _pages;
   final GlobalKey<MapScreenState> _mapKey = GlobalKey<MapScreenState>();
@@ -34,31 +31,6 @@ class _MainScreenState extends State<MainScreen> {
       const LinesScreen(),
       const EventsScreen(),
     ];
-    _initApp();
-  }
-
-  Future<void> _initApp() async {
-    // 1. Initialiser le Socket
-    SocketService().initSocket();
-
-    // 2. Initialiser la localisation
-    await LocationService().init();
-
-    // 3. Charger les données complexes (les lignes de bus) en arrière-plan
-    try {
-      await ApiService().fetchLinesData();
-    } catch (e) {
-      debugPrint("Erreur lors du pré-chargement des lignes: $e");
-    }
-
-    // Sécurité visuelle ou pour laisser les données s'installer
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
-    }
   }
 
   void _onTabTapped(int index) {
@@ -87,97 +59,64 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        // L'interface principale (HomeScreen, etc.)
-        PopScope(
-          canPop: _currentIndex == 0,
-          onPopInvokedWithResult: (bool didPop, dynamic result) {
-            if (didPop) return;
+    return PopScope(
+      canPop: _currentIndex == 0,
+      onPopInvokedWithResult: (bool didPop, dynamic result) {
+        if (didPop) return;
 
-            if (_currentIndex == 1) {
-              final mapState = _mapKey.currentState;
-              if (mapState != null && mapState.hasSubState) {
-                mapState.handleBack();
-                return; // Arrêt ici pour ne pas changer d'onglet
-              }
-            }
+        if (_currentIndex == 1) {
+          final mapState = _mapKey.currentState;
+          if (mapState != null && mapState.hasSubState) {
+            mapState.handleBack();
+            return; // Arrêt ici pour ne pas changer d'onglet
+          }
+        }
 
-            // Si on n'est pas sur la carte, on y retourne (avec état par défaut)
-            _onTabTapped(0);
-          },
-          child: Scaffold(
-            extendBody: true, // Pour l'effet futuriste (la barre peut flotter)
-            body: _pages[_currentIndex],
-            bottomNavigationBar: Container(
-              decoration: BoxDecoration(
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, -5),
-                  ),
-                ],
+        // Si on n'est pas sur la carte, on y retourne (avec état par défaut)
+        _onTabTapped(0);
+      },
+      child: Scaffold(
+        extendBody: true, // Pour l'effet futuriste (la barre peut flotter)
+        body: _pages[_currentIndex],
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 10,
+                offset: const Offset(0, -5),
               ),
-              child: BottomNavigationBar(
-                currentIndex: _currentIndex,
-                onTap: _onTabTapped,
-                type: BottomNavigationBarType.fixed,
-                items: const [
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.home_outlined),
-                    activeIcon: Icon(Icons.home),
-                    label: 'Accueil',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.map_outlined),
-                    activeIcon: Icon(Icons.map),
-                    label: 'Carte',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.directions_bus_outlined),
-                    activeIcon: Icon(Icons.directions_bus),
-                    label: 'Lignes',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.campaign_outlined),
-                    activeIcon: Icon(Icons.campaign),
-                    label: 'Bons plans',
-                  ),
-                ],
+            ],
+          ),
+          child: BottomNavigationBar(
+            currentIndex: _currentIndex,
+            onTap: _onTabTapped,
+            type: BottomNavigationBarType.fixed,
+            items: const [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.home_outlined),
+                activeIcon: Icon(Icons.home),
+                label: 'Accueil',
               ),
-            ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.map_outlined),
+                activeIcon: Icon(Icons.map),
+                label: 'Carte',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.directions_bus_outlined),
+                activeIcon: Icon(Icons.directions_bus),
+                label: 'Lignes',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.campaign_outlined),
+                activeIcon: Icon(Icons.campaign),
+                label: 'Bons plans',
+              ),
+            ],
           ),
         ),
-        
-        // Si ça charge, on affiche un voile transparent et le cercle de chargement
-        if (_isLoading)
-          Positioned.fill(
-            child: Container(
-              color: Colors.black.withValues(alpha: 0.6), // Voile noir semi-transparent
-              child: const Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                    SizedBox(height: 16),
-                    Text(
-                      "Chargement des données en cours...",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        decoration: TextDecoration.none, // Nécessaire car en dehors du Scaffold
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-      ],
+      ),
     );
   }
 }
