@@ -82,6 +82,7 @@ class MapScreenState extends State<MapScreen> {
   final Map<String, Map<String, dynamic>> _activeBuses = {};
 
   bool _isScouting = false;
+  bool _isSatelliteView = false;
   StreamSubscription<Position>? _positionStream;
 
   @override
@@ -605,9 +606,11 @@ class MapScreenState extends State<MapScreen> {
   Widget build(BuildContext context) {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final String tileUrl = isDark
-        ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-        : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+    final String tileUrl = _isSatelliteView
+        ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+        : (isDark
+              ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+              : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png');
 
     // List des polylines (lignes sur la carte)
     final List<Polyline<String>> _polylinesUnselected = [];
@@ -1251,6 +1254,24 @@ class MapScreenState extends State<MapScreen> {
                   },
                 ),
               ],
+            ),
+          ),
+          // Bouton Mode Vue Carte / Satellite (bas à gauche)
+          Positioned(
+            bottom: 120,
+            left: 16,
+            child: FloatingActionButton(
+              heroTag: 'map_type_btn',
+              backgroundColor: isDark ? AppColors.darkSlate : Colors.white,
+              child: Icon(
+                _isSatelliteView ? Icons.map : Icons.satellite_alt,
+                color: _isSatelliteView ? Colors.blue : Colors.green,
+              ),
+              onPressed: () {
+                setState(() {
+                  _isSatelliteView = !_isSatelliteView;
+                });
+              },
             ),
           ),
         ],
