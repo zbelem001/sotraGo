@@ -1116,7 +1116,7 @@ class MapScreenState extends State<MapScreen> {
 
           if (_selectedItinerary != null)
             Positioned(
-              bottom: 90,
+              bottom: 80,
               left: 16,
               right: 80, // Laisse de la place pour les FABs
               child: Card(
@@ -1160,7 +1160,7 @@ class MapScreenState extends State<MapScreen> {
             ),
 
           Positioned(
-            bottom: 90,
+            bottom: 80,
             right: 16,
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -1218,6 +1218,21 @@ class MapScreenState extends State<MapScreen> {
                     },
                   ),
                 const SizedBox(height: 16),
+                // Bouton Mode Vue Carte / Satellite
+                FloatingActionButton(
+                  heroTag: 'map_type_btn',
+                  backgroundColor: isDark ? AppColors.darkSlate : Colors.white,
+                  child: Icon(
+                    _isSatelliteView ? Icons.map : Icons.satellite_alt,
+                    color: _isSatelliteView ? Colors.blue : Colors.green,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _isSatelliteView = !_isSatelliteView;
+                    });
+                  },
+                ),
+                const SizedBox(height: 16),
                 // Bouton Ma position
                 FloatingActionButton(
                   heroTag: 'location_btn',
@@ -1254,24 +1269,6 @@ class MapScreenState extends State<MapScreen> {
                   },
                 ),
               ],
-            ),
-          ),
-          // Bouton Mode Vue Carte / Satellite (bas à gauche)
-          Positioned(
-            bottom: 90,
-            left: 16,
-            child: FloatingActionButton(
-              heroTag: 'map_type_btn',
-              backgroundColor: isDark ? AppColors.darkSlate : Colors.white,
-              child: Icon(
-                _isSatelliteView ? Icons.map : Icons.satellite_alt,
-                color: _isSatelliteView ? Colors.blue : Colors.green,
-              ),
-              onPressed: () {
-                setState(() {
-                  _isSatelliteView = !_isSatelliteView;
-                });
-              },
             ),
           ),
         ],
