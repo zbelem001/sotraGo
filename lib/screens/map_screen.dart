@@ -690,39 +690,61 @@ class MapScreenState extends State<MapScreen> {
 
       // Tracer les lignes pointillées (marche à pied)
       if (_currentLocation != null && _selectedItinerary!.segments.isNotEmpty) {
-        _polylinesSelected.add(
-          Polyline<String>(
-            points: [
+        final distanceCalc = const Distance();
+
+        double distToStart = distanceCalc
+            .as(
+              LengthUnit.Meter,
               _selectedItinerary!.startLocation,
               _selectedItinerary!.segments.first.boardStop.location,
-            ],
-            color: Colors.grey,
-            strokeWidth: 3.0,
-            pattern: StrokePattern.dashed(segments: const [10, 10]),
-          ),
-        );
+            )
+            .toDouble();
 
-        _polylinesSelected.add(
-          Polyline<String>(
-            points: [
+        if (distToStart > 10) {
+          _polylinesSelected.add(
+            Polyline<String>(
+              points: [
+                _selectedItinerary!.startLocation,
+                _selectedItinerary!.segments.first.boardStop.location,
+              ],
+              color: Colors.grey,
+              strokeWidth: 3.0,
+              pattern: StrokePattern.dashed(segments: const [10, 10]),
+            ),
+          );
+        }
+
+        double distToEnd = distanceCalc
+            .as(
+              LengthUnit.Meter,
               _selectedItinerary!.segments.last.alightStop.location,
               _selectedItinerary!.endLocation,
-            ],
-            color: Colors.grey,
-            strokeWidth: 3.0,
-            pattern: StrokePattern.dashed(segments: const [10, 10]),
-          ),
-        );
+            )
+            .toDouble();
 
-        // Marqueur final de la destination
-        markers.add(
-          Marker(
-            point: _selectedItinerary!.endLocation,
-            width: 40,
-            height: 40,
-            child: const Icon(Icons.flag, color: Colors.blue, size: 40),
-          ),
-        );
+        if (distToEnd > 10) {
+          _polylinesSelected.add(
+            Polyline<String>(
+              points: [
+                _selectedItinerary!.segments.last.alightStop.location,
+                _selectedItinerary!.endLocation,
+              ],
+              color: Colors.grey,
+              strokeWidth: 3.0,
+              pattern: StrokePattern.dashed(segments: const [10, 10]),
+            ),
+          );
+
+          // Marqueur final de la destination
+          markers.add(
+            Marker(
+              point: _selectedItinerary!.endLocation,
+              width: 40,
+              height: 40,
+              child: const Icon(Icons.flag, color: Colors.blue, size: 40),
+            ),
+          );
+        }
       }
     } else {
       // DESSINER TOUTE LES LIGNES
