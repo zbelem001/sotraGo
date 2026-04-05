@@ -32,6 +32,35 @@ Ce document retrace l'ensemble des tâches, corrections de bugs, améliorations 
 
 Afin de préparer l'application à supporter la charge des futurs utilisateurs urbains (pics d'utilisation liés aux WebSockets et aux calculs d'itinéraires PostgreSQL/pgRouting), la stratégie DevOps suivante a été établie :
 
+
+### Étape Actuelle : Notre Infrastructure à Disposition
+
+Actuellement, l'ensemble du système repose sur une architecture solide, déjà dockerisée et fonctionnelle, répartie ainsi :
+
+- **Application Mobile (Frontend)** :
+  - Développée en **Flutter** (Android/iOS), avec une UI fluide et un système de "Native Splash Screen" perfectionné.
+  - Communique avec le backend via des appels REST (API) et des **WebSockets** (Socket.io) pour le suivi en temps réel des bus.
+
+- **Backend (API & Temps Réel)** :
+  - Construit en **Node.js** avec Express.
+  - Gère les connexions **Socket.io** pour diffuser les coordonnées GPS (Mode Éclaireur / Bus) aux utilisateurs connectés.
+  - Conteneurisé avec **Docker** (le `Dockerfile` et le `docker-compose.yml` sont prêts), ce qui permet de le lancer sur n'importe quel serveur (VPS, cloud) avec un simple `docker-compose up -d`.
+
+- **Base de Données et Routage (PostgreSQL + PostGIS + pgRouting)** :
+  - Un conteneur **PostgreSQL** dédié, dopé avec l'extension spatiale **PostGIS** et le moteur de graphes **pgRouting**.
+  - C'est ce composant massif qui stocke les lignes de bus, les arrêts, le réseau routier et qui calcule les itinéraires intelligents en fonction des coordonnées GPS.
+  - Hébergé de manière persistante (volumes Docker) pour ne pas perdre les données géographiques au redémarrage.
+
+- **Cache & Scalabilité (Redis)** :
+  - Un conteneur **Redis** est présent dans notre stack Docker.
+  - Il joue un double rôle vital : 
+    1. Il sert d'**Adapter Pub/Sub** pour Socket.io (permettant à plusieurs serveurs Node.js de discuter entre eux si on scale l'application).
+    2. Il agit comme un cache ultra-rapide pour éviter de solliciter PostgreSQL sur les requêtes fréquentes ou statiques.
+
+- **Gestion et Orchestration Locale (Docker Compose)** :
+  - L'intégralité de cet environnement (Node.js, PostgreSQL/pgRouting, Redis) est orchestrée localement via **Docker Compose**.
+  - Un seul fichier lie ensemble la base de données, le cache et l'application serveur, gérant automatiquement la création du réseau interne (networks), l'ordre de démarrage (depends_on), et la persistance des données (volumes).
+
 ### A. Scalabilité des WebSockets (Backend Node.js)
 - **Le problème** : Un utilisateur connecté au Serveur A ne peut pas recevoir la position d'un bus envoyée au Serveur B s'ils ne communiquent pas entre eux.
 - **La solution** : 
