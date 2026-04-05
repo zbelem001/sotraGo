@@ -49,12 +49,25 @@ class RoutingService {
     // ESSAI DE CONSULTER L'API BACKEND
     try {
       final backendResponse = await ApiService().fetchItinerary(
-        start.latitude, start.longitude,
-        end.latitude, end.longitude,
+        start.latitude,
+        start.longitude,
+        end.latitude,
+        end.longitude,
       );
 
       if (backendResponse != null && backendResponse['status'] == 'success') {
-        return _parseBackendItinerary(backendResponse, start, end, allLines);
+        var apiRoutes = _parseBackendItinerary(
+          backendResponse,
+          start,
+          end,
+          allLines,
+        );
+        if (apiRoutes.isNotEmpty) {
+          return apiRoutes;
+        }
+        debugPrint(
+          "L'API n'a retourné aucun Itinerary avec bus, passage au Fallback local.",
+        );
       }
     } catch (e) {
       debugPrint("API routing en échec, passage au Fallback : $e");
@@ -75,7 +88,7 @@ class RoutingService {
     if (routeData == null) return results;
 
     List<RouteSegment> segments = [];
-    
+
     // On boucle sur les steps pour retrouver les arrêts et la ligne
     for (var step in routeData['steps'] ?? []) {
       if (step['type'] == 'BUS') {
@@ -95,7 +108,9 @@ class RoutingService {
         SotracoStop? alightStop;
 
         try {
-          boardStop = matchLine.stops.firstWhere((s) => s.name == boardStopName);
+          boardStop = matchLine.stops.firstWhere(
+            (s) => s.name == boardStopName,
+          );
         } catch (e) {
           if (matchLine.stops.isNotEmpty) {
             boardStop = matchLine.stops.first;
@@ -103,19 +118,23 @@ class RoutingService {
         }
 
         try {
-          alightStop = matchLine.stops.firstWhere((s) => s.name == alightStopName);
+          alightStop = matchLine.stops.firstWhere(
+            (s) => s.name == alightStopName,
+          );
         } catch (e) {
           if (matchLine.stops.isNotEmpty) {
-             alightStop = matchLine.stops.last;
+            alightStop = matchLine.stops.last;
           }
         }
 
         if (boardStop != null && alightStop != null) {
-          segments.add(RouteSegment(
-            line: matchLine,
-            boardStop: boardStop,
-            alightStop: alightStop,
-          ));
+          segments.add(
+            RouteSegment(
+              line: matchLine,
+              boardStop: boardStop,
+              alightStop: alightStop,
+            ),
+          );
         }
       }
     }
@@ -129,15 +148,18 @@ class RoutingService {
     }
 
     if (segments.isNotEmpty) {
-      results.add(Itinerary(
-        segments: segments,
-        startLocation: start,
-        endLocation: end,
-        totalWalkingDistance: (routeData['totalWalkingDistance'] as num).toDouble(),
-        estimatedTime: (routeData['estimatedTimeMinutes'] as num).toDouble(),
-        totalCost: (routeData['totalCostFCFA'] as num).toInt(),
-        geometry: geom,
-      ));
+      results.add(
+        Itinerary(
+          segments: segments,
+          startLocation: start,
+          endLocation: end,
+          totalWalkingDistance: (routeData['totalWalkingDistance'] as num)
+              .toDouble(),
+          estimatedTime: (routeData['estimatedTimeMinutes'] as num).toDouble(),
+          totalCost: (routeData['totalCostFCFA'] as num).toInt(),
+          geometry: geom,
+        ),
+      );
     }
 
     return results;
@@ -147,12 +169,17 @@ class RoutingService {
   final double walkingSpeed = 5000.0 / 60.0;
   final double busSpeed = 15000.0 / 60.0;
 
-  List<Itinerary> _localFallbackRouting(LatLng start, LatLng end, List<SotracoLine> allLines) {
+  List<Itinerary> _localFallbackRouting(
+    LatLng start,
+    LatLng end,
+    List<SotracoLine> allLines,
+  ) {
     List<Itinerary> results = [];
     for (var line in allLines) {
       if (line.stops.isEmpty || line.stops.length < 2) continue;
 
-      bool isIntercommunal = line.lineNumber.toLowerCase().contains('lci') ||
+      bool isIntercommunal =
+          line.lineNumber.toLowerCase().contains('lci') ||
           line.lineNumber.toLowerCase().contains('lic') ||
           line.name.toLowerCase().contains('inter');
       final int linePrice = isIntercommunal ? 500 : 200;
@@ -178,20 +205,35 @@ class RoutingService {
         }
       }
 
-      if (bestBoard == null || bestAlight == null || bestBoard == bestAlight) continue;
+      if (bestBoard == null || bestAlight == null || bestBoard == bestAlight)
+        continue;
 
       double totalWalk = minBoardDist + minAlightDist;
-      double busDist = distance.as(LengthUnit.Meter, bestBoard.location, bestAlight.location) * 1.4;
+      double busDist =
+          distance.as(
+            LengthUnit.Meter,
+            bestBoard.location,
+            bestAlight.location,
+          ) *
+          1.4;
       double time = (totalWalk / walkingSpeed) + (busDist / busSpeed);
 
-      results.add(Itinerary(
-        segments: [RouteSegment(line: line, boardStop: bestBoard, alightStop: bestAlight)],
-        startLocation: start,
-        endLocation: end,
-        totalWalkingDistance: totalWalk,
-        estimatedTime: time,
-        totalCost: linePrice,
-      ));
+      results.add(
+        Itinerary(
+          segments: [
+            RouteSegment(
+              line: line,
+              boardStop: bestBoard,
+              alightStop: bestAlight,
+            ),
+          ],
+          startLocation: start,
+          endLocation: end,
+          totalWalkingDistance: totalWalk,
+          estimatedTime: time,
+          totalCost: linePrice,
+        ),
+      );
     }
     results.sort((a, b) => a.estimatedTime.compareTo(b.estimatedTime));
     return results.take(10).toList();
