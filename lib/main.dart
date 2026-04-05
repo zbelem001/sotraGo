@@ -1,14 +1,9 @@
 import 'package:flutter/material.dart';
 import 'screens/main_screen.dart';
 import 'theme/app_theme.dart';
-import 'services/socket_service.dart';
-import 'services/location_service.dart';
-
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  SocketService().initSocket(); 
-  await LocationService().init();
   runApp(const SiraApp());
 }
 
@@ -18,7 +13,7 @@ class SiraApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Sira - SOTRACO',
+      title: 'MoovFaso',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,

@@ -1,0 +1,63 @@
+# SotraGO - Historique complet du Développement (A - Z)
+
+Ce document retrace l'ensemble des tâches, corrections de bugs, améliorations UI/UX et décisions architecturales effectuées sur le projet **SotraGO** (Frontend Flutter & Backend Node.js).
+
+---
+
+## 1. Résolution des Bugs de Routage (Service d'Itinéraire)
+- **Le Problème** : Suite à un changement d'IP du serveur (`192.168.11.105`), l'API backend (pgRouting) renvoyait parfois des itinéraires vides ou contenant uniquement de la marche à pied (sans bus). Cela faisait crasher ou bloquait l'affichage sur la carte.
+- **La Solution (Fallback Local)** : Implémentation d'un système de secours dans `routing_service.dart`. Si l'API renvoie 0 segment de bus, l'application bascule automatiquement sur un algorithme local (utilisant la formule de Haversine) pour trouver l'arrêt de départ et l'arrêt d'arrivée les plus proches géographiquement.
+
+## 2. Améliorations UI/UX de la Carte (`MapScreen`)
+- **Correction des marqueurs superposés** : L'arrêt final affichait simultanément un point rouge de localisation ET un marqueur de bus rouge, ce qui surchargeait l'écran. Le marqueur redondant a été supprimé.
+- **Optimisation des lignes piétonnes** : Si la destination de l'utilisateur correspondait exactement à l'arrêt final du bus (distance < 10 mètres), un drapeau bleu et une ligne en pointillés inutile s'affichaient. Une condition de distance a été ajoutée pour masquer ces éléments quand ils ne sont pas pertinents.
+- **Vue Satellite dynamique** : Ajout d'un bouton (icône *satellite_alt*) en bas à gauche de la carte permettant de basculer instantanément (`_isSatelliteView`) entre le fond de carte standard en mode sombre/clair et une imagerie satellite haute résolution (Esri World Imagery).
+- **Réorganisation des boutons flottants (FABs)** : Les boutons de localisation et d'information de la carte étaient trop haut. Ils ont été abaissés (propriété `bottom` ajustée de 120 à 90, puis 80) pour réduire l'écart avec la barre de navigation (BottomNavigationBar) et aérer l'écran.
+- **Simplification du bouton "Détails"** : Lorsqu'une ligne est sélectionnée, l'énorme bouton "Détails" a été remplacé par un bouton rond minimaliste contenant uniquement l'icône `Icons.info_outline`.
+
+## 3. Retouches de l'Écran d'Accueil et Navigation
+- **Mise à jour des tarifs** : Dans la section des "Lignes favorites / populaires" de l'accueil, le prix affiché était erroné (150 F). Il a été remplacé de manière dynamique par **200 F**.
+- **Refonte de la fenêtre d'information (?)** : La boîte de dialogue expliquant le *Mode Éclaireur* et le fonctionnement de SotraGO a été modernisée :
+  - Le texte a été épuré (suppression des emojis superflus).
+  - Les sous-titres (*Fonctionnement*, *Mode Éclaireur*, *Confidentialité*) ont reçu un fond vert semi-transparent avec des bordures arrondies.
+  - Le bouton déclencheur (en bas à droite de l'accueil) a été remonté et coloré en rouge (`Colors.red`) pour attirer l'attention.
+- **Correction de l'état de la Carte (Map Reset)** : Auparavant, si l'utilisateur consultait une ligne spécifique et retournait à l'accueil, la carte restait bloquée sur cette ligne unique lors du prochain accès. Ajout de la méthode `resetToAllLines()` appelée via une **GlobalKey** depuis `main_screen.dart` lors du clic sur l'onglet Carte, forçant l'affichage natif de *Toutes les lignes colorées*.
+
+## 4. Gestion du Backend et Versioning
+- Initialisation du suivi des versions (Git) pour le répertoire `/backend/sorre-backend`.
+- Validation et Commit local ("Update backend logic") de l'intégralité du code serveur (Node.js/Socket.io).
+- Sauvegarde et Push de l'intégralité des retouches UI du frontend vers le dépôt distant GitHub `sotraGo`.
+
+## 5. Perspectives DevOps et Architecture de Déploiement (Recommandations)
+
+Afin de préparer l'application à supporter la charge des futurs utilisateurs urbains (pics d'utilisation liés aux WebSockets et aux calculs d'itinéraires PostgreSQL/pgRouting), la stratégie DevOps suivante a été établie :
+
+### A. Scalabilité des WebSockets (Backend Node.js)
+- **Le problème** : Un utilisateur connecté au Serveur A ne peut pas recevoir la position d'un bus envoyée au Serveur B s'ils ne communiquent pas entre eux.
+- **La solution** : 
+  - **Scaling horizontal** (ajouter plusieurs serveurs/instances Node.js).
+  - Implémentation d'un **Adapter Redis** (`@socket.io/redis-adapter`) qui agit comme un pont ultra-rapide entre toutes les instances Node.js.
+  - Utilisation d'un **Load Balancer** (Répartiteur de charge) avec activation des **Sticky Sessions** pour maintenir correctement chaque connexion client.
+
+### B. Pipeline CI/CD (Automatisation)
+- **Backend (Node.js)** :
+  - **Dockerisation** (Création d'un `Dockerfile`) pour packager complètement l'application indépendamment du système.
+  - Pipeline GitHub Actions qui se déclenche à chaque `git push main` (Build de l'image Docker -> Push vers Docker Hub/ECR -> Déploiement auto via SSH ou webhook).
+- **Frontend (Flutter)** :
+  - Intégration de **Fastlane** couplé à GitHub Actions ou GitLab CI pour packager automatiquement les formats de production (APK/AAB/IPA) et les publier (TestFlight et Google Play Console).
+
+### C. Choix d'Infrastructure (Hébergement)
+- **Phase de Lancement (Niveau 1)** :
+  - **Platform-as-a-Service (PaaS)** : Services comme Render ou DigitalOcean App Platform pour héberger facilement l'image Docker avec un point terminal gérant TLS, scaling et WebSockets.
+  - **Base de données Managée** : DigitalOcean Managed Database (PostgreSQL) / AWS RDS / Supabase pour garantir des sauvegardes automatiques pour l'imposante architecture pgRouting.
+  - **Redis** : Instance gérée légère (ex: Upstash).
+- **Phase de Croissance (Niveau 2)** :
+  - Migration vers Google Kubernetes Engine (GKE) ou AWS ECS (Fargate).
+  - Ajout de **PgBouncer** devant PostgreSQL : outil indispensable de "Connection Pooling" (mise en file d'attente des connexions) pour empêcher la base de données de saturer lors de milliers de requêtes pgRouting simultanées.
+
+### D. Observabilité et Monitoring
+- **Sur l'Application (Flutter)** : Intégration de **Firebase Crashlytics** ou **Sentry** de manière obligatoire pour capturer et alerter silencieusement l'équipe lors des bugs rencontrés par les utilisateurs en production, par modèle d'appareil.
+- **Sur le Backend (Serveur)** : Installation de PM2 (sur VM native), Grafana ou Datadog avec définition d'un seuil d'alerte (Envoi d'un message Discord/Slack si la consommation de requêtes paralyse le CPU à plus de 80%).
+
+---
+*Date de mise à jour : 5 Avril 2026*

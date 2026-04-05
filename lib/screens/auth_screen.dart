@@ -69,7 +69,7 @@ class _AuthScreenState extends State<AuthScreen> {
               const SizedBox(height: 12),
 
               Text(
-                "Rejoignez la communauté Sira.\nSignalez les perturbations (pannes, embouteillages), gagnez des points et aidez les usagers de Ouagadougou en temps réel !",
+                "Rejoignez la communauté MoovFaso.\nSignalez les perturbations (pannes, embouteillages), gagnez des points et aidez les usagers de Ouagadougou en temps réel !",
                 style: TextStyle(
                   fontSize: 16,
                   color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,

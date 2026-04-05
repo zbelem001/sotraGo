@@ -26,7 +26,7 @@ class GeocodingService {
         url,
         headers: {
           // Requis par Nominatim : un User-Agent valide
-          'User-Agent': 'Sira/1.0 (contact@sira-app.bf)',
+          'User-Agent': 'MoovFaso/1.0 (contact@moovfaso.bf)',
         },
       );
 

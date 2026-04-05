@@ -36,7 +36,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     Icon(Icons.info_outline, color: AppColors.primary),
                     SizedBox(width: 8),
-                    Text("À propos de SotraGO", style: TextStyle(fontSize: 20)),
+                    Text(
+                      "À propos de MoovFaso",
+                      style: TextStyle(fontSize: 20),
+                    ),
                   ],
                 ),
                 content: SingleChildScrollView(
@@ -45,18 +48,30 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        "Bienvenue sur SotraGO ! Votre assistant de transport en commun.",
+                        "Bienvenue sur MoovFaso ! Trouver le bon chemin n'a jamais été aussi facile.",
                         style: TextStyle(fontSize: 14, height: 1.5),
                       ),
                       const SizedBox(height: 16),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppColors.primary, width: 1.5),
+                          border: Border.all(
+                            color: AppColors.primary,
+                            width: 1.5,
+                          ),
                         ),
-                        child: const Text("Fonctionnement", style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary)),
+                        child: const Text(
+                          "Fonctionnement",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 8),
                       const Text(
@@ -65,13 +80,25 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 16),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppColors.primary, width: 1.5),
+                          border: Border.all(
+                            color: AppColors.primary,
+                            width: 1.5,
+                          ),
                         ),
-                        child: const Text("Mode Éclaireur", style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary)),
+                        child: const Text(
+                          "Mode Éclaireur",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 8),
                       const Text(
@@ -80,13 +107,25 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 16),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppColors.primary, width: 1.5),
+                          border: Border.all(
+                            color: AppColors.primary,
+                            width: 1.5,
+                          ),
                         ),
-                        child: const Text("Confidentialité", style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary)),
+                        child: const Text(
+                          "Confidentialité",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 8),
                       const Text(
@@ -163,9 +202,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             const Text(
-                              "SotraGO",
+                              "MoovFaso",
                               style: TextStyle(
-                                fontSize: 32,
+                                fontSize:
+                                    24, // Taille réduite pour laisser plus d'espace
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
                                 letterSpacing: 1.2,

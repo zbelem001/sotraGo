@@ -996,7 +996,7 @@ class MapScreenState extends State<MapScreen> {
             children: [
               TileLayer(
                 urlTemplate: tileUrl,
-                userAgentPackageName: 'com.sotraco.sira',
+                userAgentPackageName: 'com.moovfaso.app',
               ),
 
               if (polylinesToDraw.isNotEmpty)

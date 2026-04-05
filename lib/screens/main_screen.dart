@@ -4,6 +4,9 @@ import 'home_screen.dart';
 import 'lines_screen.dart';
 import 'events_screen.dart';
 import '../services/location_service.dart';
+import '../services/socket_service.dart';
+import '../services/api_service.dart';
+
 
 class MainScreen extends StatefulWidget {
   final int initialIndex;
@@ -16,6 +19,7 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
+  bool _isLoading = true;
   late int _currentIndex;
   late List<Widget> _pages;
   final GlobalKey<MapScreenState> _mapKey = GlobalKey<MapScreenState>();
@@ -30,6 +34,31 @@ class _MainScreenState extends State<MainScreen> {
       const LinesScreen(),
       const EventsScreen(),
     ];
+    _initApp();
+  }
+
+  Future<void> _initApp() async {
+    // 1. Initialiser le Socket
+    SocketService().initSocket();
+
+    // 2. Initialiser la localisation
+    await LocationService().init();
+
+    // 3. Charger les données complexes (les lignes de bus) en arrière-plan
+    try {
+      await ApiService().fetchLinesData();
+    } catch (e) {
+      debugPrint("Erreur lors du pré-chargement des lignes: $e");
+    }
+
+    // Sécurité visuelle ou pour laisser les données s'installer
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   void _onTabTapped(int index) {
@@ -58,6 +87,66 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: const Color(0xFF008542), // Vert MoovFaso
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.2),
+                      blurRadius: 15,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.directions_bus,
+                  size: 80,
+                  color: Color(0xFF008542),
+                ),
+              ),
+              const SizedBox(height: 32),
+              const Text(
+                "MoovFaso",
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  letterSpacing: 2,
+                ),
+              ),
+              const SizedBox(height: 60),
+              const SizedBox(
+                width: 45,
+                height: 45,
+                child: CircularProgressIndicator(
+                  strokeWidth: 4,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                "Veuillez patienter...",
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return PopScope(
       canPop: _currentIndex == 0,
       onPopInvokedWithResult: (bool didPop, dynamic result) {
