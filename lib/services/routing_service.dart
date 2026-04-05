@@ -1,5 +1,7 @@
 import 'package:latlong2/latlong.dart';
 import '../models/sotraco_line.dart';
+import 'api_service.dart';
+import 'package:flutter/foundation.dart';
 
 class RouteSegment {
   final SotracoLine line;
@@ -21,6 +23,9 @@ class Itinerary {
   final double estimatedTime; // en minutes (marche + trajet)
   final int totalCost; // en FCFA
 
+  // Ajout de la géométrie de backend pour tracer si présente
+  final List<LatLng>? geometry;
+
   Itinerary({
     required this.segments,
     required this.startLocation,
@@ -28,43 +33,135 @@ class Itinerary {
     required this.totalWalkingDistance,
     required this.estimatedTime,
     required this.totalCost,
+    this.geometry,
   });
 }
 
 class RoutingService {
   final Distance distance = const Distance();
 
-  // Vitesse de marche moyenne : ~5 km/h -> ~83 mètres par minute
-  final double walkingSpeed = 5000.0 / 60.0;
+  /// Cherche les meilleurs itinéraires via l'API, avec Fallback local
+  Future<List<Itinerary>> findRoutes(
+    LatLng start,
+    LatLng end,
+    List<SotracoLine> allLines,
+  ) async {
+    // ESSAI DE CONSULTER L'API BACKEND
+    try {
+      final backendResponse = await ApiService().fetchItinerary(
+        start.latitude, start.longitude,
+        end.latitude, end.longitude,
+      );
 
-  // Vitesse moyenne d'un bus en ville incluant les arrêts : ~15 km/h -> 250 mètres par minute
-  final double busSpeed = 15000.0 / 60.0;
+      if (backendResponse != null && backendResponse['status'] == 'success') {
+        return _parseBackendItinerary(backendResponse, start, end, allLines);
+      }
+    } catch (e) {
+      debugPrint("API routing en échec, passage au Fallback : $e");
+    }
 
-  /// Cherche les meilleurs itinéraires entre [start] et [end]
-  List<Itinerary> findRoutes(
+    // FALLBACK : CALCUL V1 MOBILE (à vol d'oiseau)
+    return _localFallbackRouting(start, end, allLines);
+  }
+
+  List<Itinerary> _parseBackendItinerary(
+    Map<String, dynamic> json,
     LatLng start,
     LatLng end,
     List<SotracoLine> allLines,
   ) {
     List<Itinerary> results = [];
+    var routeData = json['itinerary'];
+    if (routeData == null) return results;
 
-    // Pour chaque ligne de bus, on trouve son point de montée et de descente les plus pertinents
+    List<RouteSegment> segments = [];
+    
+    // On boucle sur les steps pour retrouver les arrêts et la ligne
+    for (var step in routeData['steps'] ?? []) {
+      if (step['type'] == 'BUS') {
+        String lineName = step['line'];
+        String boardStopName = step['boardStop'];
+        String alightStopName = step['alightStop'];
+
+        // Retrouver la ligne métier correspondante
+        SotracoLine? matchLine;
+        try {
+          matchLine = allLines.firstWhere((l) => l.lineNumber == lineName);
+        } catch (e) {
+          continue;
+        }
+
+        SotracoStop? boardStop;
+        SotracoStop? alightStop;
+
+        try {
+          boardStop = matchLine.stops.firstWhere((s) => s.name == boardStopName);
+        } catch (e) {
+          if (matchLine.stops.isNotEmpty) {
+            boardStop = matchLine.stops.first;
+          }
+        }
+
+        try {
+          alightStop = matchLine.stops.firstWhere((s) => s.name == alightStopName);
+        } catch (e) {
+          if (matchLine.stops.isNotEmpty) {
+             alightStop = matchLine.stops.last;
+          }
+        }
+
+        if (boardStop != null && alightStop != null) {
+          segments.add(RouteSegment(
+            line: matchLine,
+            boardStop: boardStop,
+            alightStop: alightStop,
+          ));
+        }
+      }
+    }
+
+    // Extraction potentielle de la géométrie de type List<LatLng>
+    List<LatLng>? geom;
+    if (routeData['geometry'] != null) {
+      geom = (routeData['geometry'] as List).map((p) {
+        return LatLng(p[1], p[0]); // Geojson = [lng, lat]
+      }).toList();
+    }
+
+    if (segments.isNotEmpty) {
+      results.add(Itinerary(
+        segments: segments,
+        startLocation: start,
+        endLocation: end,
+        totalWalkingDistance: (routeData['totalWalkingDistance'] as num).toDouble(),
+        estimatedTime: (routeData['estimatedTimeMinutes'] as num).toDouble(),
+        totalCost: (routeData['totalCostFCFA'] as num).toInt(),
+        geometry: geom,
+      ));
+    }
+
+    return results;
+  }
+
+  // --- LE CALCUL ORIGINAL MIS EN MODE FALLBACK ---
+  final double walkingSpeed = 5000.0 / 60.0;
+  final double busSpeed = 15000.0 / 60.0;
+
+  List<Itinerary> _localFallbackRouting(LatLng start, LatLng end, List<SotracoLine> allLines) {
+    List<Itinerary> results = [];
     for (var line in allLines) {
       if (line.stops.isEmpty || line.stops.length < 2) continue;
 
-      bool isIntercommunal =
-          line.lineNumber.toLowerCase().contains('lci') ||
+      bool isIntercommunal = line.lineNumber.toLowerCase().contains('lci') ||
           line.lineNumber.toLowerCase().contains('lic') ||
           line.name.toLowerCase().contains('inter');
       final int linePrice = isIntercommunal ? 500 : 200;
 
       SotracoStop? bestBoard;
       double minBoardDist = double.infinity;
-
       SotracoStop? bestAlight;
       double minAlightDist = double.infinity;
 
-      // Trouver l'arrêt le plus proche du point de départ
       for (var stop in line.stops) {
         double dStart = distance.as(LengthUnit.Meter, start, stop.location);
         if (dStart < minBoardDist) {
@@ -73,7 +170,6 @@ class RoutingService {
         }
       }
 
-      // Trouver l'arrêt le plus proche de l'arrivée
       for (var stop in line.stops) {
         double dEnd = distance.as(LengthUnit.Meter, end, stop.location);
         if (dEnd < minAlightDist) {
@@ -82,50 +178,22 @@ class RoutingService {
         }
       }
 
-      if (bestBoard == null || bestAlight == null) continue;
+      if (bestBoard == null || bestAlight == null || bestBoard == bestAlight) continue;
 
-      // Si l'arrêt de montée est le même que celui de descente, le bus ne sert à rien
-      if (bestBoard == bestAlight) continue;
-
-      // Calcul des distances
       double totalWalk = minBoardDist + minAlightDist;
-
-      // Distance estimée en bus (vol d'oiseau * 1.4 pour estimer les routes)
-      double busDist =
-          distance.as(
-            LengthUnit.Meter,
-            bestBoard.location,
-            bestAlight.location,
-          ) *
-          1.4;
-
-      // Temps total estimé
+      double busDist = distance.as(LengthUnit.Meter, bestBoard.location, bestAlight.location) * 1.4;
       double time = (totalWalk / walkingSpeed) + (busDist / busSpeed);
 
-      // On peut définir une limite de bon sens (ex: ne pas marcher 15km pour prendre le bus 1km)
-      // Mais on laisse quand même les résultats pour que l'utilisateur voit l'option
-      results.add(
-        Itinerary(
-          segments: [
-            RouteSegment(
-              line: line,
-              boardStop: bestBoard,
-              alightStop: bestAlight,
-            ),
-          ],
-          startLocation: start,
-          endLocation: end,
-          totalWalkingDistance: totalWalk,
-          estimatedTime: time,
-          totalCost: linePrice,
-        ),
-      );
+      results.add(Itinerary(
+        segments: [RouteSegment(line: line, boardStop: bestBoard, alightStop: bestAlight)],
+        startLocation: start,
+        endLocation: end,
+        totalWalkingDistance: totalWalk,
+        estimatedTime: time,
+        totalCost: linePrice,
+      ));
     }
-
-    // 3. Trier les résultats du plus rapide au plus lent
     results.sort((a, b) => a.estimatedTime.compareTo(b.estimatedTime));
-
-    // Ne retourner que les 10 meilleurs résultats pour ne pas inonder l'utilisateur
     return results.take(10).toList();
   }
 }

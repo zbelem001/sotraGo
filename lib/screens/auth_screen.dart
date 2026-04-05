@@ -36,7 +36,7 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -61,16 +61,13 @@ class _AuthScreenState extends State<AuthScreen> {
                 ),
               ),
               const SizedBox(height: 32),
-              
+
               const Text(
                 "Devenez un Éclaireur",
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
-              
+
               Text(
                 "Rejoignez la communauté Sira.\nSignalez les perturbations (pannes, embouteillages), gagnez des points et aidez les usagers de Ouagadougou en temps réel !",
                 style: TextStyle(
@@ -85,7 +82,9 @@ class _AuthScreenState extends State<AuthScreen> {
               AnimatedCrossFade(
                 firstChild: _buildPhoneInput(isDark),
                 secondChild: _buildOtpInput(isDark),
-                crossFadeState: _isOtpSent ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+                crossFadeState: _isOtpSent
+                    ? CrossFadeState.showSecond
+                    : CrossFadeState.showFirst,
                 duration: const Duration(milliseconds: 300),
               ),
 
@@ -106,7 +105,9 @@ class _AuthScreenState extends State<AuthScreen> {
                     shadowColor: AppColors.primary.withOpacity(0.5),
                   ),
                   child: Text(
-                    _isOtpSent ? "Valider et Commencer" : "Recevoir mon code par SMS",
+                    _isOtpSent
+                        ? "Valider et Commencer"
+                        : "Recevoir mon code par SMS",
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -115,7 +116,7 @@ class _AuthScreenState extends State<AuthScreen> {
                   ),
                 ),
               ),
-              
+
               if (_isOtpSent) ...[
                 const SizedBox(height: 24),
                 Center(
@@ -126,8 +127,8 @@ class _AuthScreenState extends State<AuthScreen> {
                       style: TextStyle(color: AppColors.secondary),
                     ),
                   ),
-                )
-              ]
+                ),
+              ],
             ],
           ),
         ),
@@ -153,7 +154,10 @@ class _AuthScreenState extends State<AuthScreen> {
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
+                ),
                 decoration: BoxDecoration(
                   color: isDark ? Colors.grey.shade800 : Colors.grey.shade100,
                   borderRadius: const BorderRadius.only(
@@ -204,7 +208,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 color: AppColors.secondary.withOpacity(0.1),
                 blurRadius: 10,
                 spreadRadius: 2,
-              )
+              ),
             ],
           ),
           child: TextField(

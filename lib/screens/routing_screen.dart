@@ -78,10 +78,10 @@ class _RoutingScreenState extends State<RoutingScreen> {
     });
   }
 
-  void _calculateRoute() {
+  Future<void> _calculateRoute() async {
     if (_selectedDestination == null) return;
 
-    var routes = _routingService.findRoutes(
+    var routes = await _routingService.findRoutes(
       widget.currentLocation,
       _selectedDestination!,
       widget.allLines,

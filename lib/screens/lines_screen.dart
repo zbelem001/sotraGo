@@ -3,7 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../theme/app_colors.dart';
 import '../models/sotraco_line.dart';
+import '../services/api_service.dart';
+// // // removed removed removed
 import 'main_screen.dart';
+import '../services/location_service.dart';
 
 class LinesScreen extends StatefulWidget {
   final String? initialLineNumber;
@@ -24,6 +27,7 @@ class _LinesScreenState extends State<LinesScreen> {
   String _selectedCity = "Tout";
   final List<String> _cities = [
     "Tout",
+    "Favoris",
     "Ouagadougou",
     "Bobo-Dioulasso",
     "Koudougou",
@@ -47,9 +51,7 @@ class _LinesScreenState extends State<LinesScreen> {
 
   Future<void> _loadLines() async {
     try {
-      final String jsonString = await rootBundle.loadString(
-        'assets/data/sotraco_ouaga.json',
-      );
+      final String jsonString = await ApiService().fetchLinesData();
       final List<dynamic> jsonList = json.decode(jsonString);
 
       setState(() {
@@ -88,6 +90,10 @@ class _LinesScreenState extends State<LinesScreen> {
 
     if (_selectedCity != "Tout") {
       result = result.where((line) {
+        if (_selectedCity == "Favoris") {
+          return _favorites.contains(line.lineNumber);
+        }
+
         String city = line.city.toLowerCase();
         String target = _selectedCity.toLowerCase();
 
@@ -414,12 +420,15 @@ class _LinesScreenState extends State<LinesScreen> {
                       width: double.infinity,
                       child: ElevatedButton.icon(
                         onPressed: () {
-                          // Navigate to map screen and show this line
+                          if (LocationService().isScoutModeEnabled) {
+                            LocationService().startScouting(line.lineNumber);
+                          }
+
                           Navigator.pushAndRemoveUntil(
                             context,
                             MaterialPageRoute(
                               builder: (context) => MainScreen(
-                                initialIndex: 0,
+                                initialIndex: 1,
                                 initialMapLine: line.lineNumber,
                               ),
                             ),

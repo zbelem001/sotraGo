@@ -10,20 +10,51 @@ import '../theme/app_colors.dart';
 import '../models/sotraco_line.dart';
 import '../services/routing_service.dart';
 import '../services/geocoding_service.dart';
+import '../services/api_service.dart';
+// // // removed removed removed
 import 'lines_screen.dart';
+import 'leaderboard_screen.dart';
+import '../services/socket_service.dart';
+import 'dart:math' as math;
 
 class MapScreen extends StatefulWidget {
   final String? initialLineNumber;
   const MapScreen({super.key, this.initialLineNumber});
 
   @override
-  State<MapScreen> createState() => _MapScreenState();
+  State<MapScreen> createState() => MapScreenState();
 }
 
 bool _hasShownInfoBubble = false;
 
-class _MapScreenState extends State<MapScreen> {
+class MapScreenState extends State<MapScreen> {
   final MapController _mapController = MapController();
+
+  bool get hasSubState =>
+      _isSearchMode ||
+      _selectedItinerary != null ||
+      _selectedLine != null ||
+      _foundRoutes.isNotEmpty;
+
+  void handleBack() {
+    if (_isSearchMode) {
+      setState(() {
+        _isSearchMode = false;
+        _destController.clear();
+        _searchResults = [];
+      });
+    } else if (_selectedItinerary != null || _foundRoutes.isNotEmpty) {
+      setState(() {
+        _selectedItinerary = null;
+        _foundRoutes = [];
+        _destController.clear();
+      });
+    } else if (_selectedLine != null) {
+      _setSelectedLine(null);
+      _fitMapToAllLines();
+    }
+  }
+
   final LayerHitNotifier<String> _hitNotifier = ValueNotifier(null);
   final LatLng _ouagaCenter = const LatLng(12.3714, -1.5197);
 
@@ -47,11 +78,20 @@ class _MapScreenState extends State<MapScreen> {
   List<Itinerary> _foundRoutes = [];
   LatLng? _selectedDestination;
 
+  // -- Tracking Temps Réel --
+  final Map<String, Map<String, dynamic>> _activeBuses = {};
+
+  bool _isScouting = false;
+  StreamSubscription<Position>? _positionStream;
+
   @override
   void initState() {
     super.initState();
     _loadBusData();
     _checkLocationPermission();
+
+    // Écouter le temps réel
+    SocketService().socket.on('busLocationUpdated', _onBusLocationUpdated);
 
     if (!_hasShownInfoBubble) {
       _showInfoBubble = true;
@@ -68,10 +108,106 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   void dispose() {
+    SocketService().socket.off('busLocationUpdated', _onBusLocationUpdated);
     _destController.dispose();
     _destFocusNode.dispose();
     _searchDebounce?.cancel();
+    _positionStream?.cancel();
     super.dispose();
+  }
+
+  void _onBusLocationUpdated(dynamic data) {
+    if (mounted) {
+      setState(() {
+        String deviceId = data['deviceId'];
+        _activeBuses[deviceId] = {
+          'lat': data['lat'],
+          'lng': data['lng'],
+          'timestamp': data['timestamp'],
+        };
+      });
+    }
+  }
+
+  void _setSelectedLine(SotracoLine? line) {
+    setState(() {
+      _selectedLine = line;
+      _activeBuses.clear(); // On nettoie les anciens bus
+
+      if (line != null) {
+        SocketService().socket.emit('subscribeToLine', {
+          'line': line.lineNumber,
+        });
+      }
+    });
+  }
+
+  Future<void> _toggleScoutingMode() async {
+    setState(() {
+      _isScouting = !_isScouting;
+    });
+
+    if (_isScouting) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "🕵️‍♂️ Mode Éclaireur ACTIVÉ ! Partage sécurisé et gagnant.",
+          ),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 4),
+        ),
+      );
+
+      // On utilise le mode "Platform specific" pour le stream avec pings écodynamiques
+      _positionStream =
+          Geolocator.getPositionStream(
+            locationSettings: const LocationSettings(
+              accuracy: LocationAccuracy.high,
+              distanceFilter:
+                  30, // Filtre : n'émettre un ping que si déplacement > 30 mètres !
+            ),
+          ).listen((Position position) {
+            if (mounted) {
+              setState(() {
+                _currentLocation = LatLng(
+                  position.latitude,
+                  position.longitude,
+                );
+              });
+
+              // 🧠 L'IA "Zéro friction"
+              // Dès que le GPS bouge, le téléphone envoie la position UNIQUEMENT s'il est sûr
+              // de sa ligne actuelle, soit parce qu'elle est sélectionnée manuellement,
+              // soit déduite du calcul d'itinéraire.
+
+              if (_selectedLine != null) {
+                SocketService().sendLocationUpdate(
+                  _selectedLine!.lineNumber,
+                  position.latitude,
+                  position.longitude,
+                );
+              } else if (_selectedItinerary != null) {
+                for (var segment in _selectedItinerary!.segments) {
+                  // Les segments sont vos arrêts/lignes
+                  SocketService().sendLocationUpdate(
+                    segment.line.lineNumber,
+                    position.latitude,
+                    position.longitude,
+                  );
+                  break; // On ne broadcast que pour le premier bus du trajet pour l'instant
+                }
+              }
+            }
+          });
+    } else {
+      _positionStream?.cancel();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("🛑 Mode Éclaireur DÉSACTIVÉ."),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    }
   }
 
   Future<void> _checkLocationPermission() async {
@@ -213,9 +349,9 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
-  void _calculateRoute() {
+  Future<void> _calculateRoute() async {
     if (_selectedDestination == null || _currentLocation == null) return;
-    var routes = _routingService.findRoutes(
+    var routes = await _routingService.findRoutes(
       _currentLocation!,
       _selectedDestination!,
       _allLines,
@@ -245,9 +381,7 @@ class _MapScreenState extends State<MapScreen> {
 
   Future<void> _loadBusData() async {
     try {
-      final String jsonString = await rootBundle.loadString(
-        'assets/data/sotraco_ouaga.json',
-      );
+      final String jsonString = await ApiService().fetchLinesData();
       final List<dynamic> jsonList = json.decode(jsonString);
 
       List<SotracoLine> lines = jsonList
@@ -257,21 +391,18 @@ class _MapScreenState extends State<MapScreen> {
 
       setState(() {
         _allLines = lines;
-
-        if (widget.initialLineNumber != null) {
-          try {
-            _selectedLine = _allLines.firstWhere(
-              (line) => line.lineNumber == widget.initialLineNumber,
-            );
-          } catch (_) {
-            _selectedLine = null;
-          }
-        } else {
-          _selectedLine = null;
-        }
-
         _isLoading = false;
       });
+
+      SotracoLine? matchedLine;
+      if (widget.initialLineNumber != null) {
+        try {
+          matchedLine = _allLines.firstWhere(
+            (line) => line.lineNumber == widget.initialLineNumber,
+          );
+        } catch (_) {}
+      }
+      _setSelectedLine(matchedLine);
 
       if (_selectedLine != null) {
         _fitMapToSelectedLine();
@@ -488,6 +619,17 @@ class _MapScreenState extends State<MapScreen> {
       Color c = _getColorForLine(
         _selectedItinerary!.segments.first.line.lineNumber,
       );
+
+      // Si le backend nous fournit la géométrie précise, l'utiliser :
+      if (_selectedItinerary!.geometry != null) {
+        _polylinesSelected.add(
+          Polyline<String>(
+            points: _selectedItinerary!.geometry!,
+            color: Colors.green,
+            strokeWidth: 5.0,
+          ),
+        );
+      }
 
       // Tracer chaque segment du trajet en bus
       for (var segment in _selectedItinerary!.segments) {
@@ -742,6 +884,30 @@ class _MapScreenState extends State<MapScreen> {
       ..._polylinesSelected,
     ];
 
+    // DESSINER LES BUS EN DIRECT (MODE ECLAIREUR / COMMUNITY)
+    for (var bus in _activeBuses.values) {
+      markers.add(
+        Marker(
+          point: LatLng(bus['lat'], bus['lng']),
+          width: 40,
+          height: 40,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(blurRadius: 10, color: Colors.blue.withOpacity(0.5)),
+              ],
+              border: Border.all(color: Colors.blue, width: 2),
+            ),
+            child: const Center(
+              child: Icon(Icons.directions_bus, color: Colors.blue, size: 24),
+            ),
+          ),
+        ),
+      );
+    }
+
     if (_currentLocation != null) {
       markers.add(
         Marker(
@@ -806,9 +972,7 @@ class _MapScreenState extends State<MapScreen> {
               onTap: (_, __) {
                 // Deselect when clicking on the map background
                 if (_selectedLine != null) {
-                  setState(() {
-                    _selectedLine = null;
-                  });
+                  _setSelectedLine(null);
                 }
               },
               interactionOptions: const InteractionOptions(
@@ -1043,7 +1207,12 @@ class _MapScreenState extends State<MapScreen> {
                       }
                       setState(() {
                         _isSearchMode = true;
+                        _selectedItinerary =
+                            null; // Cacher l'itinéraire précédent pendant la recherche
                       });
+                      _setSelectedLine(
+                        null,
+                      ); // Nettoie bien la ligne ET les bus éventuels
                       _destFocusNode.requestFocus();
                     },
                   ),
@@ -1329,7 +1498,6 @@ class _MapScreenState extends State<MapScreen> {
           ),
           child: InkWell(
             onTap: () {
-              // L'utilisateur a choisi un itinéraire !
               setState(() {
                 _isSearchMode = false;
                 _selectedItinerary = itinerary;
@@ -1483,7 +1651,12 @@ class _MapScreenState extends State<MapScreen> {
               }
               setState(() {
                 _isSearchMode = true;
+                _selectedItinerary =
+                    null; // Cacher l'itinéraire précédent pendant la recherche
               });
+              _setSelectedLine(
+                null,
+              ); // Nettoie bien la ligne ET les bus éventuels
               _destFocusNode.requestFocus();
             },
             decoration: InputDecoration(

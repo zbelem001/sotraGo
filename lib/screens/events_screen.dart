@@ -242,7 +242,8 @@ class _EventsScreenState extends State<EventsScreen> {
           left: 16.0,
           right: 16.0,
           top: 16.0,
-          bottom: 100.0, // Espace pour ne pas être caché par le menu
+          bottom:
+              150.0, // Espace ajouté pour ne pas être caché par la bottomNav
         ),
         children: [
           // Bannière Pub principale
