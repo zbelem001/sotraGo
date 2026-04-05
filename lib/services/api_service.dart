@@ -15,7 +15,9 @@ class ApiService {
 
   String get backendUrl {
     if (defaultTargetPlatform == TargetPlatform.android && !kIsWeb) {
-      return 'http://10.0.2.2:3000';
+      // 192.168.11.105 est l'IP locale de votre machine (pour un SM A165F physique)
+      // Si émulateur, c'était 10.0.2.2
+      return 'http://192.168.11.105:3000';
     }
     return 'http://127.0.0.1:3000';
   }

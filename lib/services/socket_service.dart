@@ -16,12 +16,12 @@ class SocketService {
 
   /// Initialiser la connexion au serveur WebSockets
   Future<void> initSocket() async {
-    // 10.0.2.2 est utilisé pour Android Simulator
+    // 192.168.11.105 est l'IP locale (pour mobile physique connecté au même Wi-Fi)
     // localhost ou 127.0.0.1 pour iOS Simulator ou le Web
     String backendUrl = 'http://127.0.0.1:3000';
 
     if (defaultTargetPlatform == TargetPlatform.android && !kIsWeb) {
-      backendUrl = 'http://10.0.2.2:3000';
+      backendUrl = 'http://192.168.11.105:3000';
     }
 
     // Récupérer le JWT

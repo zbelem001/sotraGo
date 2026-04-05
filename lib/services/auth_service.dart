@@ -45,7 +45,8 @@ class AuthService {
     // Mettre l'url du backend
     String backendUrl = 'http://127.0.0.1:3000';
     if (!kIsWeb && Platform.isAndroid) {
-      backendUrl = 'http://10.0.2.2:3000';
+      backendUrl =
+          'http://192.168.11.105:3000'; // IP machine pour test physique
     }
 
     final deviceId = await getDeviceId();
@@ -65,7 +66,9 @@ class AuthService {
         }
         return token;
       } else {
-        debugPrint("❌ Erreur pendant la récupération du token JWT: ${response.statusCode}");
+        debugPrint(
+          "❌ Erreur pendant la récupération du token JWT: ${response.statusCode}",
+        );
       }
     } catch (e) {
       debugPrint("❌ Erreur lors de l'appel /auth/device : $e");
