@@ -27,11 +27,14 @@ class SocketService {
     // Récupérer le JWT
     String? token = await AuthService().fetchJwt();
 
-    socket = IO.io(backendUrl, <String, dynamic>{
-      'transports': ['websocket'],
-      'autoConnect': false,
-      'auth': {'token': token},
-    });
+    socket = IO.io(
+      backendUrl,
+      IO.OptionBuilder()
+          .setTransports(['websocket'])
+          .disableAutoConnect()
+          .setAuth({'token': token})
+          .build(),
+    );
 
     socket.connect();
 
