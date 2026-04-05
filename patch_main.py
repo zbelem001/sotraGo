@@ -1,24 +1,23 @@
-import sys
+with open("lib/screens/main_screen.dart", "r") as f:
+    text = f.read()
 
-with open('/home/zia/Documents/MOI/MES PROJETS DEV/sorré/succes/lib/main.dart', 'r') as f:
-    content = f.read()
+old_code = """    setState(() {
+      // On ne réinitialise plus la map complètement par une nouvelle UniqueKey()
+      // pour que le GlobalKey soit conservé et pour garder une fluidité,
+      // MAIS on peut éventuellement appeler une méthode pour nettoyer la carte.
+      // Ou on recree la carte avec le même key si on veut tout reset sauf la key: Non, une GlobalKey est unique.
+      _currentIndex = index;
+    });"""
 
-import_old = "import 'services/socket_service.dart';"
-import_new = "import 'services/socket_service.dart';\nimport 'services/location_service.dart';"
-content = content.replace(import_old, import_new)
+new_code = """    if (index == 1 && _currentIndex != 1) {
+      _mapKey.currentState?.resetToAllLines();
+    }
 
-main_old = """void main() {
-  WidgetsFlutterBinding.ensureInitialized();
-  SocketService().initSocket(); // Initialisation du socket AVANT l'interface MapScreen
-  runApp(const SiraApp());
-}"""
-main_new = """void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  SocketService().initSocket(); // Initialisation du socket AVANT l'interface MapScreen
-  await LocationService().init(); // Charger l'état persistant du mode éclaireur
-  runApp(const SiraApp());
-}"""
-content = content.replace(main_old, main_new)
+    setState(() {
+      _currentIndex = index;
+    });"""
 
-with open('/home/zia/Documents/MOI/MES PROJETS DEV/sorré/succes/lib/main.dart', 'w') as f:
-    f.write(content)
+text = text.replace(old_code, new_code)
+
+with open("lib/screens/main_screen.dart", "w") as f:
+    f.write(text)

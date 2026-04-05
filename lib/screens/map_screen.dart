@@ -55,6 +55,20 @@ class MapScreenState extends State<MapScreen> {
     }
   }
 
+
+  void resetToAllLines() {
+    setState(() {
+      _isSearchMode = false;
+      _destController.clear();
+      _searchResults = [];
+      _selectedItinerary = null;
+      _foundRoutes = [];
+      _selectedDestination = null;
+    });
+    _setSelectedLine(null);
+    _fitMapToAllLines();
+  }
+
   final LayerHitNotifier<String> _hitNotifier = ValueNotifier(null);
   final LatLng _ouagaCenter = const LatLng(12.3714, -1.5197);
 
