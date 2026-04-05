@@ -21,7 +21,7 @@ class _HomeScreenState extends State<HomeScreen> {
           : AppColors.backgroundLight,
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(
-          bottom: 60.0,
+          bottom: 90.0,
         ), // Pour ne pas être caché par la barre de menu
         child: FloatingActionButton(
           heroTag: 'info_fab',
@@ -39,17 +39,57 @@ class _HomeScreenState extends State<HomeScreen> {
                     Text("À propos de SotraGO", style: TextStyle(fontSize: 20)),
                   ],
                 ),
-                content: const SingleChildScrollView(
+                content: SingleChildScrollView(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        "Bienvenue sur SotraGO ! Votre assistant de transport en commun.\n\n"
-                        "🔍 Fonctionnement :\n"
-                        "Consultez les prix, les arrêts, et surtout la position des bus en temps réel pour vos trajets.\n\n"
-                        "🌟 Mode Éclaireur :\n"
-                        "L'accès à la carte nécessite le Mode Éclaireur. En l'activant, vous acceptez de partager anonymement votre position pendant vos trajets pour aider la communauté à repérer les bus.\n\n"
-                        "🛑 Confidentialité :\n"
+                      const Text(
+                        "Bienvenue sur SotraGO ! Votre assistant de transport en commun.",
+                        style: TextStyle(fontSize: 14, height: 1.5),
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.primary, width: 1.5),
+                        ),
+                        child: const Text("Fonctionnement", style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary)),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        "Consultez les prix, les arrêts, et surtout la position des bus en temps réel pour vos trajets.",
+                        style: TextStyle(fontSize: 14, height: 1.5),
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.primary, width: 1.5),
+                        ),
+                        child: const Text("Mode Éclaireur", style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary)),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        "L'accès à la carte nécessite le Mode Éclaireur. En l'activant, vous acceptez de partager anonymement votre position pendant vos trajets pour aider la communauté à repérer les bus.",
+                        style: TextStyle(fontSize: 14, height: 1.5),
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.primary, width: 1.5),
+                        ),
+                        child: const Text("Confidentialité", style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary)),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
                         "L'application ne vous suit plus du tout après que vous l'ayez quittée (en arrière-plan ou fermée).",
                         style: TextStyle(fontSize: 14, height: 1.5),
                       ),
@@ -68,7 +108,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             );
           },
-          backgroundColor: AppColors.primary,
+          backgroundColor: Colors.red,
           child: const Icon(Icons.question_mark, color: Colors.white),
         ),
       ),

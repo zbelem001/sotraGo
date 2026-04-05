@@ -55,7 +55,6 @@ class MapScreenState extends State<MapScreen> {
     }
   }
 
-
   void resetToAllLines() {
     setState(() {
       _isSearchMode = false;
@@ -1182,17 +1181,10 @@ class MapScreenState extends State<MapScreen> {
               children: [
                 // Bouton Détails (si ligne sélectionnée) ou Itinéraire
                 if (_selectedLine != null && _selectedItinerary == null)
-                  FloatingActionButton.extended(
+                  FloatingActionButton(
                     heroTag: 'details_btn',
                     backgroundColor: AppColors.primary,
-                    icon: const Icon(Icons.info_outline, color: Colors.white),
-                    label: const Text(
-                      'Détails',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    child: const Icon(Icons.info_outline, color: Colors.white),
                     onPressed: () {
                       Navigator.push(
                         context,
