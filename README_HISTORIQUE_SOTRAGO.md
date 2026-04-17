@@ -90,3 +90,42 @@ Actuellement, l'ensemble du système repose sur une architecture solide, déjà 
 
 ---
 *Date de mise à jour : 5 Avril 2026*
+
+
+
+ctuellement, votre base de données, votre serveur Redis et votre backend NestJS tournent sur votre ordinateur local. Si vous générez un APK maintenant, il cherchera à se connecter à votre réseau local (ex: localhost ou 192.168.x.x), ce qui ne marchera pas sur le téléphone de vos camarades une fois rentrés chez eux.
+
+Voici les 4 étapes incontournables pour un vrai déploiement :
+
+1. Louer un Serveur en ligne (VPS)
+Puisque vous utilisez PostgreSQL avec pgRouting (une configuration Docker très spécifique pour les cartes avec les scripts OSM) et Redis, le plus simple et le moins cher est de louer un VPS (un petit serveur virtuel sous Linux).
+
+Où louer ? OVH, Contabo, Hostinger ou DigitalOcean. (Un VPS avec 4Go à 8Go de RAM est recommandé car l'import cartographique PostgreSQL consomme de la mémoire). Ça coûte entre 5€ et 10€ / mois.
+Ce qu'on y fera : On installera Docker, on copiera votre code Backend, et on lancera votre docker-compose.yml et votre import_osm.sh exactement comme on l'a fait sur votre machine.
+2. Déployer et exposer le Backend NestJS
+Une fois la base de données prête sur le VPS :
+
+Il faudra lancer le serveur NestJS en continu (avec Node.js et un outil comme PM2, ou mieux : le mettre aussi dans un conteneur Docker).
+Si le VPS a l'adresse IP 194.56.xx.xx, votre backend sera joignable mondialement via http://194.56.xx.xx:3000. (On pourra même mettre un nom de domaine et du HTTPS plus tard).
+3. Modifier l'URL dans l'application Flutter
+Avant de générer l'APK, vous devrez aller dans le code source de Frontend (Flutter) et remplacer toutes les occurrences de votre IP locale par l'adresse IP de votre nouveau serveur VPS.
+
+Les requêtes API devront pointer vers http://IP_DU_VPS:3000/api/...
+Les connexions Socket.io devront pointer sur ce même serveur.
+4. Générer l'APK de production
+Une fois le backend en ligne et le frontend mis à jour avec la bonne IP, vous pourrez compiler l'application de façon optimisée :
+Je lancerai pour vous la commande :
+
+
+flutter build apk --release
+Cela créera le fichier final app-release.apk que vous pourrez envoyer à vos camarades par WhatsApp, Télégram ou Google Drive.
+
+💡 Alternative Gratuite et Temporaire (Pour tester demain à l'école)
+Si c'est juste pour une démonstration demain et que vous ne voulez pas payer de serveur ce soir :
+
+Vous gardez votre PC allumé avec tout qui tourne (Backend + Base de données).
+Vous utilisez un outil gratuit comme Ngrok (qui va créer une URL publique sécurisée comme https://78df-89-12.eu.ngrok.io qui redirige vers votre PC).
+On met cette URL temporaire dans le code Flutter.
+On build l'APK et vous l'envoyez.
+Inconvénient : Dès que vous fermez votre PC ou Ngrok, l'application de vos camarades cesse de fonctionner.
+Voulez-vous qu'on mette en place la solution temporaire (Ngrok), ou prévoyez-vous de prendre un petit serveur VPS pour faire les choses professionnellement ?
