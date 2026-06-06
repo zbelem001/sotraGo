@@ -95,7 +95,7 @@ class MapScreenState extends State<MapScreen> {
   final Map<String, Map<String, dynamic>> _activeBuses = {};
 
   bool _isScouting = false;
-  bool _isSatelliteView = false;
+  bool _isSatelliteView = true;
   StreamSubscription<Position>? _positionStream;
 
   @override
@@ -106,6 +106,13 @@ class MapScreenState extends State<MapScreen> {
 
     // Écouter le temps réel
     SocketService().socket.on('busLocationUpdated', _onBusLocationUpdated);
+
+    // Zoom initial sur la ville (Ouagadougou)
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        _mapController.move(_ouagaCenter, 13.5);
+      }
+    });
 
     if (!_hasShownInfoBubble) {
       _showInfoBubble = true;
@@ -418,10 +425,10 @@ class MapScreenState extends State<MapScreen> {
       }
       _setSelectedLine(matchedLine);
 
+      // Si aucune ligne n'est sélectionnée au démarrage, on garde le zoom fixé sur la ville
+      // au lieu de dézoomer pour voir toutes les lignes.
       if (_selectedLine != null) {
         _fitMapToSelectedLine();
-      } else {
-        _fitMapToAllLines();
       }
     } catch (e) {
       debugPrint("Erreur lors du chargement des données SOTRACO: $e");
