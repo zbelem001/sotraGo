@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'map_screen.dart';
 import 'lines_screen.dart';
 import 'events_screen.dart';
@@ -42,7 +43,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: _currentIndex == 0,
+      canPop: false,
       onPopInvokedWithResult: (bool didPop, dynamic result) {
         if (didPop) return;
 
@@ -52,6 +53,9 @@ class _MainScreenState extends State<MainScreen> {
             mapState.handleBack();
             return; // Arrêt ici pour ne pas changer d'onglet
           }
+          // Quitte l'application s'il n'y a plus de contexte à fermer sur la Map
+          SystemNavigator.pop();
+          return;
         }
 
         // Si on n'est pas sur la carte, on y retourne (avec état par défaut)
