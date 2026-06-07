@@ -933,8 +933,10 @@ class MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
             // ── FAB column (right side) ──────────────────────────────────
             if (!_isSearchMode)
-              Positioned(
-                bottom: _selectedItinerary != null ? 220 : 100,
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.fastOutSlowIn,
+                bottom: _selectedItinerary != null ? 360 : 100,
                 right: 20,
                 child: _FabColumn(
                   selectedLine: _selectedLine,
