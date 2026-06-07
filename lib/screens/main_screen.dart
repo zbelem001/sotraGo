@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'map_screen.dart';
-import 'home_screen.dart';
 import 'lines_screen.dart';
 import 'events_screen.dart';
-import '../services/location_service.dart';
-
 
 class MainScreen extends StatefulWidget {
   final int initialIndex;
@@ -26,7 +23,6 @@ class _MainScreenState extends State<MainScreen> {
     super.initState();
     _currentIndex = widget.initialIndex;
     _pages = [
-      const HomeScreen(),
       MapScreen(key: _mapKey, initialLineNumber: widget.initialMapLine),
       const LinesScreen(),
       const EventsScreen(),
@@ -34,21 +30,7 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   void _onTabTapped(int index) {
-    // Si on veut aller sur la map (1) ou les lignes (2) et que le mode éclaireur est désactivé
-    if ((index == 1 || index == 2) && !LocationService().isScoutModeEnabled) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            "Veuillez activer le Mode Éclaireur sur l'accueil pour accéder à la carte et aux lignes.",
-          ),
-          backgroundColor: Colors.redAccent,
-          duration: Duration(seconds: 3),
-        ),
-      );
-      return;
-    }
-
-    if (index == 1 && _currentIndex != 1) {
+    if (index == 0 && _currentIndex != 0) {
       _mapKey.currentState?.resetToAllLines();
     }
 
@@ -64,7 +46,7 @@ class _MainScreenState extends State<MainScreen> {
       onPopInvokedWithResult: (bool didPop, dynamic result) {
         if (didPop) return;
 
-        if (_currentIndex == 1) {
+        if (_currentIndex == 0) {
           final mapState = _mapKey.currentState;
           if (mapState != null && mapState.hasSubState) {
             mapState.handleBack();
@@ -94,14 +76,9 @@ class _MainScreenState extends State<MainScreen> {
             type: BottomNavigationBarType.fixed,
             items: const [
               BottomNavigationBarItem(
-                icon: Icon(Icons.home_outlined),
-                activeIcon: Icon(Icons.home),
-                label: 'Accueil',
-              ),
-              BottomNavigationBarItem(
                 icon: Icon(Icons.map_outlined),
                 activeIcon: Icon(Icons.map),
-                label: 'Carte',
+                label: 'Map',
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.directions_bus_outlined),
