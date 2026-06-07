@@ -653,7 +653,7 @@ class _RouteCard extends StatelessWidget {
                       Text(
                         "$durationMin min",
                         style: TextStyle(
-                          fontSize: 22,
+                          fontSize: 16,
                           fontWeight: FontWeight.w800,
                           letterSpacing: -0.5,
                           color: isDark ? Colors.white : Colors.black87,
