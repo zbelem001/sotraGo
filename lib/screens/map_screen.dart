@@ -1516,7 +1516,7 @@ class _ItineraryCard extends StatelessWidget {
             ),
             boxShadow: _D.cardShadow,
           ),
-          padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
+          padding: const EdgeInsets.fromLTRB(24, 12, 24, 95),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -1535,7 +1535,7 @@ class _ItineraryCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       'Prendre la ${seg.line.name}',
-                      style: _D.headlineMd,
+                      style: _D.headlineMd.copyWith(fontSize: 15),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
