@@ -1717,22 +1717,16 @@ class _FabColumn extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Context button: Details or Route
-        if (selectedLine != null && selectedItinerary == null)
+        // Context button: Details
+        if (selectedLine != null && selectedItinerary == null) ...[
           _Fab(
             icon: Icons.info_outline_rounded,
             color: _D.mint,
             onTap: onDetails,
             tooltip: 'Détails',
-          )
-        else
-          _Fab(
-            icon: Icons.directions_rounded,
-            color: _D.success,
-            onTap: onRoute,
-            tooltip: 'Itinéraire',
           ),
-        const SizedBox(height: 12),
+          const SizedBox(height: 12),
+        ],
         // Scout mode
         _Fab(
           icon: isScouting ? Icons.sensors_rounded : Icons.sensors_off_rounded,
