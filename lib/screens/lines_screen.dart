@@ -1012,12 +1012,16 @@ class _ExpandedStops extends StatelessWidget {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: isTerminus
-                                ? AppColors.primary
+                                ? (isFirst ? Colors.green : Colors.redAccent)
                                 : AppColors.primary.withOpacity(0.25),
                             boxShadow: isTerminus
                                 ? [
                                     BoxShadow(
-                                      color: AppColors.primary.withOpacity(0.3),
+                                      color:
+                                          (isFirst
+                                                  ? Colors.green
+                                                  : Colors.redAccent)
+                                              .withOpacity(0.3),
                                       blurRadius: 5,
                                       spreadRadius: 1,
                                     ),
@@ -1072,7 +1076,9 @@ class _ExpandedStops extends StatelessWidget {
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 1.1,
-                          color: AppColors.primary.withOpacity(0.6),
+                          color: isFirst
+                              ? Colors.green.withOpacity(0.8)
+                              : Colors.redAccent.withOpacity(0.8),
                         ),
                       ),
                     ),
