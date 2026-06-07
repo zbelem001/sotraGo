@@ -683,7 +683,7 @@ class _RouteCard extends StatelessWidget {
                       Text(
                         "$price FCFA",
                         style: const TextStyle(
-                          fontSize: 18,
+                          fontSize: 16,
                           fontWeight: FontWeight.w800,
                           letterSpacing: -0.3,
                           color: AppColors.primary,
