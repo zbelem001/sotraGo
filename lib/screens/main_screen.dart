@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'map_screen.dart';
 import 'lines_screen.dart';
 import 'events_screen.dart';
+import 'account_screen.dart';
 
 class MainScreen extends StatefulWidget {
   final int initialIndex;
@@ -27,6 +28,7 @@ class _MainScreenState extends State<MainScreen> {
       MapScreen(key: _mapKey, initialLineNumber: widget.initialMapLine),
       const LinesScreen(),
       const EventsScreen(),
+      const AccountScreen(),
     ];
   }
 
@@ -93,6 +95,11 @@ class _MainScreenState extends State<MainScreen> {
                 icon: Icon(Icons.campaign_outlined),
                 activeIcon: Icon(Icons.campaign),
                 label: 'Bons plans',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.person_outline),
+                activeIcon: Icon(Icons.person),
+                label: 'Compte',
               ),
             ],
           ),
