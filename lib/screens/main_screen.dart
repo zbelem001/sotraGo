@@ -91,27 +91,29 @@ class _MainScreenState extends State<MainScreen> {
                 showSelectedLabels: true,
                 showUnselectedLabels: false,
                 items: const [
-              BottomNavigationBarItem(
-                icon: Icon(Icons.map_outlined),
-                activeIcon: Icon(Icons.map),
-                label: 'Map',
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.map_outlined),
+                    activeIcon: Icon(Icons.map),
+                    label: 'Map',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.directions_bus_outlined),
+                    activeIcon: Icon(Icons.directions_bus),
+                    label: 'Lignes',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.campaign_outlined),
+                    activeIcon: Icon(Icons.campaign),
+                    label: 'Bons plans',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.person_outline),
+                    activeIcon: Icon(Icons.person),
+                    label: 'Compte',
+                  ),
+                ],
               ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.directions_bus_outlined),
-                activeIcon: Icon(Icons.directions_bus),
-                label: 'Lignes',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.campaign_outlined),
-                activeIcon: Icon(Icons.campaign),
-                label: 'Bons plans',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.person_outline),
-                activeIcon: Icon(Icons.person),
-                label: 'Compte',
-              ),
-            ],
+            ),
           ),
         ),
       ),
